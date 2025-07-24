@@ -1,0 +1,264 @@
+* {
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+
+  .fundo-cinza {
+    background-color: #d9d9d9;
+    height: 100vh;
+    width: 100%;
+    position: relative;
+  }
+
+  .logo {
+    width: 120px;
+    position: relative; /* display relative não existe */
+    margin: 40px auto 0; /* centraliza horizontalmente */
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .area-branca {
+    background-color: white;
+    border-top-left-radius: 80px;
+    border-top-right-radius: 0;
+    padding: 30px 20px;
+    height: 65vh;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  }
+  
+
+  .linha {
+    width: 100%; /* não auto */
+    max-width: 100%;
+    height: 2px;
+    background: rgb(163, 163, 163);
+    margin-top: 90px;
+  }
+
+
+  h1 {
+    position: relative;
+    top: -90px;
+    left: 45px; 
+  }
+
+  .options {
+    margin-top: -50px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+  }
+  
+  .option-item {
+    display: flex;
+    align-items: center;
+    border-radius: 50px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+  }
+  
+  
+  .icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2.5px solid currentColor;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+    font-size: 18px;
+    color: inherit;
+  }
+  
+  .arrow {
+    width: 60px;
+  }
+  /* Ícones simples com CSS - use emojis ou svg se quiser */
+  
+  .barber-icon::before {
+    content: "👤"; /* pessoa */
+  }
+  
+  .service-icon::before {
+    content: "✂️"; /* tesoura */
+  }
+  
+  .schedule-icon::before {
+    content: "📅"; /* calendário */
+  }
+  
+  .option-item span {
+    flex-grow: 1;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .arrow {
+    font-size: 20px;
+    color: #999;
+  }
+  
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  
+  .modal-content {
+    background: white !important;
+    border-radius: 12px;
+    padding: 1rem;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 4px 16px rgba(31, 31, 31, 0.178);
+  }
+  
+  .modal-content h3 {
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .barbeiro-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .barbeiro-card {
+    background-color: #f7f7f7;
+    border-radius: 40px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .barbeiro-card:hover {
+    background-color: #eaeaea;
+  }
+  
+  .barbeiro-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .barbeiro-foto {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .barbeiro-nome {
+    font-weight: 500;
+    color: #333;
+    font-size: 15px;
+  }
+  
+  .estrela {
+    color: #f1c40f;
+    font-weight: bold;
+    font-size: 15px;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  
+
+/* Bottom Navigation Bar Styles */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--color-text);
+    flex-grow: 1;
+}
+
+.bottom-nav-item i {
+    font-size: 1.5rem;
+}
+
+.bottom-nav-item span {
+    font-size: 0.75rem;
+}
+
+.bottom-nav-item.active {
+    color: var(--color-primary);
+}
+
+
+.btn-agendar {
+    width: 300px;
+    height: 50px;
+    margin-left: 50px;
+    margin-top: 30px;
+}
+
+#barbeiro .barbeiro-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  #barbeiro .barbeiro-foto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  #barbeiro .barbeiro-nome {
+    font-weight: 500;
+  }
+  
+  #barbeiro .arrow {
+    margin-left: auto;
+    font-size: 1.5rem;
+    color: #888;
+  }
+  
