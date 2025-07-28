@@ -1,264 +1,439 @@
 * {
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
+  box-sizing: border-box;     
+  overflow: hidden;
+}
 
-  body, html {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    font-family: Arial, sans-serif;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: Arial, sans-serif;
+  background-color: #d9d9d9;
+  height: 100%;
+}
 
-  .fundo-cinza {
-    background-color: #d9d9d9;
-    height: 100vh;
-    width: 100%;
-    position: relative;
-  }
+.fundo-cinza {
+  background-color: #d9d9d9;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  padding-top: 0;
+  margin-top: 0;
+}
 
-  .logo {
-    width: 120px;
-    position: relative; /* display relative não existe */
-    margin: 40px auto 0; /* centraliza horizontalmente */
-    left: 50%;
-    transform: translateX(-50%);
-  }
+.logo {
+  width: 120px;
+  display: block;
+  margin: 0 auto;
+  padding: 0;
+}     
 
-  .area-branca {
-    background-color: white;
-    border-top-left-radius: 80px;
-    border-top-right-radius: 0;
-    padding: 30px 20px;
-    height: 65vh;
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
-  }
-  
+.area-branca {
+  background-color: white;
+  border-top-left-radius: 80px;
+  padding: 30px 20px 160px; /* suficiente pro botão */
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  box-sizing: border-box;
+}     
 
-  .linha {
-    width: 100%; /* não auto */
-    max-width: 100%;
-    height: 2px;
-    background: rgb(163, 163, 163);
-    margin-top: 90px;
-  }
+.linha {
+  width: 100%;
+  height: 2px;
+  background: rgb(163, 163, 163);
+  margin-top: 40px;
+}
 
+h1 {
+  font-size: 40px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px; /* <- evita ultrapassar a largura da tela */
+  max-width: 100%;
+  overflow-wrap: break-word; /* quebra se passar do limite */
+  word-break: break-word;
+}
 
-  h1 {
-    position: relative;
-    top: -90px;
-    left: 45px; 
-  }
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
 
-  .options {
-    margin-top: -50px;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-  }
-  
-  .option-item {
-    display: flex;
-    align-items: center;
-    border-radius: 50px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-  }
-  
-  
-  .icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: #fff;
-    border: 2.5px solid currentColor;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-right: 15px;
-    font-size: 18px;
-    color: inherit;
-  }
-  
-  .arrow {
-    width: 60px;
-  }
-  /* Ícones simples com CSS - use emojis ou svg se quiser */
-  
-  .barber-icon::before {
-    content: "👤"; /* pessoa */
-  }
-  
-  .service-icon::before {
-    content: "✂️"; /* tesoura */
-  }
-  
-  .schedule-icon::before {
-    content: "📅"; /* calendário */
-  }
-  
-  .option-item span {
-    flex-grow: 1;
-    font-size: 16px;
-    color: #333;
-  }
-  
-  .arrow {
-    font-size: 20px;
-    color: #999;
-  }
-  
+.option-item {
+  display: flex;
+  align-items: center;
+  border-radius: 50px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+}
 
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-  }
-  
-  .modal-content {
-    background: white !important;
-    border-radius: 12px;
-    padding: 1rem;
-    width: 90%;
-    max-width: 350px;
-    box-shadow: 0 4px 16px rgba(31, 31, 31, 0.178);
-  }
-  
-  .modal-content h3 {
-    margin-bottom: 16px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-  }
+.icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2.5px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: inherit;
+  margin-right: 15px;
+}
 
-  .barbeiro-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-  
-  .barbeiro-card {
-    background-color: #f7f7f7;
-    border-radius: 40px;
-    padding: 0.5rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  
-  .barbeiro-card:hover {
-    background-color: #eaeaea;
-  }
-  
-  .barbeiro-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .barbeiro-foto {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-  
-  .barbeiro-nome {
-    font-weight: 500;
-    color: #333;
-    font-size: 15px;
-  }
-  
-  .estrela {
-    color: #f1c40f;
-    font-weight: bold;
-    font-size: 15px;
-  }
-  
-  .hidden {
-    display: none;
-  }
-  
-  
+/* Emojis */
+.barber-icon::before {
+  content: "👤";
+}
 
-/* Bottom Navigation Bar Styles */
+.service-icon::before {
+  content: "✂️";
+}
+
+.schedule-icon::before {
+  content: "📅";
+}
+
+.option-item span {
+  font-size: 16px;
+  color: #333;
+  flex-grow: 1;
+}
+
+.arrow {
+  font-size: 20px;
+  color: #999;
+  margin-left: auto;
+}
+
+/* Botão de agendar fixo */
+.btn-agendar {
+  position: sticky;
+  bottom: 30px;
+  margin: 0 auto;
+  display: block;
+  width: calc(100% - 40px);
+  max-width: 360px;
+  height: 50px;
+  background-color: #888888;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 10;
+} 
+.btn-agendar:hover {
+  background-color: #777777;
+}                      
+
+/* --- Modal Barbeiro --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  position: relative;           /* necessário para posicionar o botão X */
+  background: white !important;
+  border-radius: 12px;
+  padding: 1rem;
+  width: 90%;
+  max-width: 350px;
+  box-shadow: 0 4px 16px rgba(31, 31, 31, 0.178);
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Botão X para fechar modal */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 26px;
+  font-weight: bold;
+  color: #777;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* Lista de barbeiros */
+.barbeiro-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Card */
+.barbeiro-card {
+  background-color: #f7f7f7;
+  border-radius: 40px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.barbeiro-card:hover {
+  background-color: #eaeaea;
+}
+
+/* Info */
+.barbeiro-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Foto do barbeiro (padronizada) */
+.barbeiro-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Nome */
+.barbeiro-nome {
+  font-weight: 500;
+  color: #333;
+  font-size: 15px;
+}
+
+/* Estrela de avaliação */
+.estrela {
+  color: #f1c40f;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Bottom Navigation Bar */
 .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background-color: #ffffff;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 1000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 998;
 }
 
 .bottom-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    color: var(--color-text);
-    flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--color-text, #333);
+  flex-grow: 1;
 }
 
 .bottom-nav-item i {
-    font-size: 1.5rem;
+  font-size: 1.5rem;
 }
 
 .bottom-nav-item span {
-    font-size: 0.75rem;
+  font-size: 0.75rem;
 }
 
 .bottom-nav-item.active {
-    color: var(--color-primary);
+  color: var(--color-primary, #007bff);
 }
 
 
-.btn-agendar {
-    width: 300px;
-    height: 50px;
-    margin-left: 50px;
-    margin-top: 30px;
+/* Modal de Serviços */ 
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
 }
 
-#barbeiro .barbeiro-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.hidden { display: none; }
+
+.servico-list li {
+  background: #f2f2f2;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.servico-list li:hover { background: #ddd; }
+
+.detalhe img { margin: 10px 0; }
+
+.acoes { display: flex; justify-content: space-between; }
+.acoes button { padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; }
+#acancelarServico { background: #ccc; }
+#confirmarServico { background: #4caf50; color: white; }
+
+.servico-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.servico-foto {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.servico-nome {
+  font-size: 16px;
+}
+
+/* Foto e texto padronizados para barbeiro e serviço */
+.barbeiro-info, .servico-info {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* mesmo espaçamento */
+}
+
+.barbeiro-foto, .servico-foto {
+  width: 44px;   /* mesmo tamanho do Silvio Santos */
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.barbeiro-nome, .servico-nome {
+  font-weight: bold;  /* agora ambos ficam negritos */
+  font-size: 15px;    /* tamanho igual */
+  color: #333;        /* cor um pouco mais escura */
+}
+
+/* Reutiliza seu modal-overlay e modal-content existentes */
+
+/* Grid dos horários */
+.horarios-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+/* Botão de horário */
+.horario-btn {
+  background: #f7f7f7;
+  border: 1px solid #007bff;
+  color: #007bff;
+  border-radius: 30px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.horario-btn:hover {
+  background: #007bff;
+  color: white;
+}
+
+/* Horário indisponível */
+.horario-btn.indisponivel {
+  background: #ddd;
+  color: #777;
+  border: 1px solid #ccc;
+  cursor: not-allowed;
+}
+
+/* Botões do rodapé */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.btn-cancelar {
+  background: #e0e0e0;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.btn-ok {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+
+/* Responsivo */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 20px;
+    margin-left: 8px;
   }
-  
-  #barbeiro .barbeiro-foto {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
+
+  .icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }  
+
+  .option-item {
+    padding: 8px 16px;
   }
-  
-  #barbeiro .barbeiro-nome {
-    font-weight: 500;
+      
+  .logo {
+    width: 100px;
+    margin: 0 auto; /* garante centralização */
   }
-  
-  #barbeiro .arrow {
-    margin-left: auto;
-    font-size: 1.5rem;
-    color: #888;
+
+
+  .btn-agendar {
+    height: 45px;
+    font-size: 15px;
   }
-  
+}

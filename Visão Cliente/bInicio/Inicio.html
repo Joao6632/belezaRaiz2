@@ -17,9 +17,8 @@
     
         <!-- ÁREA BRANCA FIXADA EMBAIXO -->
         <div class="area-branca">
-          <div class="linha"></div>
-
           <h1>Olá <br>(nome)</h1>
+          <div class="linha"></div>
 
           <div class="options">
             <div class="option-item" id="barbeiro" data-option="barbeiro" data-selected="false">
@@ -43,18 +42,21 @@
 
 
     <!-- NavBar Inferior-->
+<nav class="bottom-nav">
     <nav class="bottom-nav">
         <a href="#" class="bottom-nav-item active">
             <i class="bi bi-house-door-fill"></i>
         </a>
-        <a href="#" class="bottom-nav-item">
-            <i class="bi bi-calendar"></i>
-        </a>
-    </nav>
+    <a href="../cAgendamentos/index.html" class="bottom-nav-item">
+        <i class="bi bi-calendar"></i>
+    </a>
+</nav>
+
   
   <!-- MODAL DE BARBEIROS -->
   <div id="modalBarbeiros" class="modal-overlay hidden">
     <div class="modal-content">
+      <span class="close-btn" onclick="fecharModal(this)">×</span>
       <h3>Selecione o barbeiro</h3>
       <ul class="barbeiro-list">
         <li class="barbeiro-card" data-nome="Daniel Zolin" data-foto="../../imagens/daniel.jpg" data-nota="4.8">
@@ -82,6 +84,87 @@
     </div>
   </div>
       
+
+ <!-- MODAL DE SERVIÇOS -->
+<div id="modalServicos" class="modal-overlay hidden">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModal(this)">×</span>
+    <h3>Selecione o serviço</h3>
+    <ul class="servico-list">
+      <li class="servico-card" 
+          data-nome="Tesoura" 
+          data-preco="45,00" 
+          data-descricao="Arte manual, fio a fio. Precisão que valoriza seu estilo com leveza, movimento e personalidade." 
+          data-duracao="30min" 
+           data-img="tesoura.jpg">  
+          ✂️ Tesoura - R$ 45,00
+      </li>
+      <li class="servico-card" 
+          data-nome="Máquina" 
+          data-preco="35,00" 
+          data-descricao="Corte rápido e prático com máquina." 
+          data-duracao="20min" 
+          data-img="maquina.jpg">
+          💈 Máquina - R$ 35,00
+      </li>
+      <li class="servico-card" 
+          data-nome="Sobrancelha" 
+          data-preco="25,00" 
+          data-descricao="Design de sobrancelha com acabamento perfeito." 
+          data-duracao="15min" 
+          data-img="sobrancelha.jpg">
+          👁️ Sobrancelha - R$ 25,00
+      </li>
+      <li class="servico-card" 
+          data-nome="Barba" 
+          data-preco="20,00" 
+          data-descricao="Barba bem feita, com acabamento impecável." 
+          data-duracao="15min" 
+          data-img="barba.jpg">
+          🧔 Barba - R$ 20,00
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- MODAL DETALHE DO SERVIÇO -->
+<div id="modalServicoDetalhe" class="modal-overlay hidden">
+  <div class="modal-content detalhe">
+    <h3 id="detalheTitulo"></h3>
+    <!-- ✅ FOTO SOMENTE AQUI -->
+    <img id="detalheImg" src="" alt="" style="width:100%;border-radius:10px;">
+    <p id="detalheDescricao"></p>
+    <p><strong>Preço:</strong> R$ <span id="detalhePreco"></span></p>
+    <p><strong>Duração:</strong> <span id="detalheDuracao"></span></p>
+    <div class="acoes">
+      <button id="cancelarServico">Cancelar</button>
+      <button id="confirmarServico">Selecionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CALENDÁRIO -->
+<div class="modal-overlay hidden" id="modalCalendario">
+  <div class="modal-content">
+    <h3>Selecione a data</h3>
+    <input type="date" id="dataEscolhida">
+    <div class="modal-actions">
+      <button class="btn-cancelar" onclick="fecharModal('modalCalendario')">Cancelar</button>
+      <button class="btn-ok" onclick="abrirHorarios()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HORÁRIOS -->
+<div class="modal-overlay hidden" id="modalHorarios">
+  <div class="modal-content">
+    <h3>Selecione o horário</h3>
+    <div class="horarios-grid" id="listaHorarios"></div>
+    <div class="modal-actions">
+      <button class="btn-cancelar" onclick="fecharModal('modalHorarios')">Fechar</button>
+    </div>
+  </div>
+</div>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

@@ -1,0 +1,116 @@
+* {
+  box-sizing: border-box;     
+  overflow: hidden;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: Arial, sans-serif;
+  background-color: #d9d9d9;
+  height: 100%;
+}
+
+.fundo-cinza {
+  background-color: #d9d9d9;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.logo {
+  width: 120px;
+  display: block;
+  margin: 0 auto;
+  padding: 0;
+}     
+
+.area-branca {
+  background-color: white;
+  border-top-left-radius: 80px;
+  padding: 30px 20px 160px; /* suficiente pro botão */
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  box-sizing: border-box;
+}     
+
+.linha {
+  width: 100%;
+  height: 2px;
+  background: rgb(163, 163, 163);
+  margin-top: 20px;
+}
+
+h1 {
+  font-size: 40px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px; /* <- evita ultrapassar a largura da tela */
+  max-width: 100%;
+  overflow-wrap: break-word; /* quebra se passar do limite */
+  word-break: break-word;
+}
+
+/* Bottom Navigation Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 998;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--color-text, #333);
+  flex-grow: 1;
+}
+
+.bottom-nav-item i {
+  font-size: 1.5rem;
+}
+
+.bottom-nav-item span {
+  font-size: 0.75rem;
+}
+
+.bottom-nav-item.active {
+  color: var(--color-primary, #007bff);
+}
+
+/* ======== TITULO CENTRALIZADO ======== */
+.header-titulo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;     
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.header-titulo h1 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header-titulo h2 {
+  font-size: 14px;
+  font-weight: normal;
+  margin: 0;
+}
