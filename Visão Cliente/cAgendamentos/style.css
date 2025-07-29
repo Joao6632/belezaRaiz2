@@ -114,3 +114,58 @@ h1 {
   font-weight: normal;
   margin: 0;
 }
+
+/* 🔹 Card de Agendamento */
+.card-agendamento {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #b3b3b3;
+    border-radius: 10px;
+    padding: 10px;
+    color: black;
+    margin-bottom: 10px;
+}
+
+/* 🔹 Imagem do Card */
+.card-agendamento img {
+    width: 80px;
+    height: 80px;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+/* 🔹 Informações do Card */
+.card-info {
+    flex: 1;
+}
+.card-info h3 {
+    font-size: 16px;
+    margin: 0;
+}
+.card-info p {
+    margin: 2px 0;
+    font-size: 14px;
+}
+
+/* 🔹 Botões do Card */
+.card-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.card-buttons button {
+    border: none;
+    border-radius: 5px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.card-buttons .cancelar {
+    background: #ff4d4d;
+    color: white;
+}
+.card-buttons .reagendar {
+    background: #007bff;
+    color: white;
+}
