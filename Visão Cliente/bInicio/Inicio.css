@@ -258,22 +258,28 @@ h1 {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: var(--color-text, #333);
   flex-grow: 1;
+  color: var(--color-text, #333) !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.bottom-nav-item i {
-  font-size: 1.5rem;
+.bottom-nav-item i { font-size: 1.5rem; }
+.bottom-nav-item span { font-size: 0.75rem; }
+
+/* NÃO pintar no toque/foco/hover */
+.bottom-nav-item:hover,
+.bottom-nav-item:focus,
+.bottom-nav-item:active {
+  color: var(--color-text, #333) !important;
 }
 
-.bottom-nav-item span {
-  font-size: 0.75rem;
+/* Só o realmente ativo é azul */
+.bottom-nav-item.active,
+.bottom-nav-item.active:hover,
+.bottom-nav-item.active:focus,
+.bottom-nav-item.active:active {
+  color: var(--color-primary, #007bff) !important;
 }
-
-.bottom-nav-item.active {
-  color: var(--color-primary, #007bff);
-}
-
 
 /* Modal de Serviços */ 
 .modal-overlay {

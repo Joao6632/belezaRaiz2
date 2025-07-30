@@ -1,26 +1,31 @@
-* {
-  box-sizing: border-box;     
-  overflow: hidden;
+/* 🔧 Reset global sem ferrar o scroll */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
+/* 🔧 Travar scroll do documento; só a área branca rola */
 html, body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  height: 100dvh;          /* mais estável em mobile */
+  overflow: hidden;        /* <- trava o body/html */
   font-family: Arial, sans-serif;
   background-color: #d9d9d9;
-  height: 100%;
 }
 
+/* 🔹 Fundo cinza como wrapper flex (necessário p/ o overflow interno funcionar) */
 .fundo-cinza {
   background-color: #d9d9d9;
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
   position: relative;
+  display: flex;           /* permite a área branca ocupar o restante e rolar */
+  flex-direction: column;
   padding-top: 0;
   margin-top: 0;
 }
 
+/* 🔹 Logo centralizada */
 .logo {
   width: 120px;
   display: block;
@@ -28,31 +33,52 @@ html, body {
   padding: 0;
 }     
 
+/* 🔹 Área branca — ÚNICA com rolagem */
 .area-branca {
   background-color: white;
   border-top-left-radius: 80px;
-  padding: 30px 20px 160px; /* suficiente pro botão */
+  padding: 30px 18px calc(60px + env(safe-area-inset-bottom) + 24px); /* espaço pra bottom nav */
   width: 100%;
-  min-height: 100vh;
+  flex: 1 1 auto;          /* ocupa o resto da tela */
+  min-height: 0;           /* crucial p/ overflow no flex container */
   position: relative;
-  box-sizing: border-box;
-}     
+  overflow-y: auto;        /* ← só aqui rola */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* suavidade no iOS */
+  overscroll-behavior: contain;      /* evita “vazar” pro body */
+  scrollbar-width: thin;             /* Firefox */
+}
 
+/* Scroll bonito no Chrome */
+.area-branca::-webkit-scrollbar {
+  width: 6px;
+}
+.area-branca::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+.area-branca::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 🔹 Linha de divisão */
 .linha {
   width: 100%;
   height: 2px;
   background: rgb(163, 163, 163);
   margin-top: 20px;
+  margin-bottom: 12px; /* afasta a linha dos cards */
 }
 
+/* 🔹 Título */
 h1 {
   font-size: 40px;
   margin-top: 0;
   margin-bottom: 10px;
   margin-left: 10px;
-  margin-right: 10px; /* <- evita ultrapassar a largura da tela */
+  margin-right: 10px;
   max-width: 100%;
-  overflow-wrap: break-word; /* quebra se passar do limite */
+  overflow-wrap: break-word;
   word-break: break-word;
 }
 
@@ -76,23 +102,29 @@ h1 {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: var(--color-text, #333);
   flex-grow: 1;
+  color: var(--color-text, #333) !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.bottom-nav-item i {
-  font-size: 1.5rem;
+.bottom-nav-item i { font-size: 1.5rem; }
+.bottom-nav-item span { font-size: 0.75rem; }
+
+/* NÃO pintar no toque/foco/hover */
+.bottom-nav-item:hover,
+.bottom-nav-item:focus,
+.bottom-nav-item:active {
+  color: var(--color-text, #333) !important;
 }
 
-.bottom-nav-item span {
-  font-size: 0.75rem;
+/* Só o realmente ativo é azul */
+.bottom-nav-item.active,
+.bottom-nav-item.active:hover,
+.bottom-nav-item.active:focus,
+.bottom-nav-item.active:active {
+  color: var(--color-primary, #007bff) !important;
 }
-
-.bottom-nav-item.active {
-  color: var(--color-primary, #007bff);
-}
-
-/* ======== TITULO CENTRALIZADO ======== */
+/* 🔹 Título centralizado */
 .header-titulo {
   display: flex;
   flex-direction: column;
@@ -102,70 +134,123 @@ h1 {
   margin-top: 10px;
   margin-bottom: 20px;
 }
-
 .header-titulo h1 {
   font-size: 18px;
   font-weight: bold;
   margin: 0;
 }
-
 .header-titulo h2 {
   font-size: 14px;
   font-weight: normal;
   margin: 0;
 }
 
-/* 🔹 Card de Agendamento */
+/* 🔹 Card de Agendamento (fundo cinza claro) */
 .card-agendamento {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #b3b3b3;
-    border-radius: 10px;
-    padding: 10px;
-    color: black;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f2f2f2; /* cinza claro */
+  border-radius: 12px;
+  padding: 12px;
+  color: #333;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
 }
 
 /* 🔹 Imagem do Card */
 .card-agendamento img {
-    width: 80px;
-    height: 80px;
-    border-radius: 5px;
-    object-fit: cover;
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
-/* 🔹 Informações do Card */
-.card-info {
-    flex: 1;
-}
+/* 🔹 Informações */
+.card-info { flex: 1; }
 .card-info h3 {
-    font-size: 16px;
-    margin: 0;
+  font-size: 15px;
+  margin: 0 0 4px;
+  font-weight: bold;
+  color: #222;
 }
 .card-info p {
-    margin: 2px 0;
-    font-size: 14px;
+  margin: 2px 0;
+  font-size: 13px;
+  color: #555;
 }
 
-/* 🔹 Botões do Card */
+/* 🔹 Botões */
 .card-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .card-buttons button {
-    border: none;
-    border-radius: 5px;
-    padding: 4px 6px;
-    cursor: pointer;
-    font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.2s;
 }
-.card-buttons .cancelar {
-    background: #ff4d4d;
-    color: white;
+.card-buttons .cancelar { background: #ff4d4d; color: white; }
+.card-buttons .cancelar:hover { background: #e03b3b; }
+.card-buttons .reagendar { background: #007bff; color: white; }
+.card-buttons .reagendar:hover { background: #005dc3; }
+
+
+/* 🔎 Barra de busca (menor e sticky) */
+.search-wrap {
+  position: sticky;        /* fica visível enquanto rola os cards */
+  top: 8px;                /* distância do topo da .area-branca */
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  /* menor e centralizada */
+  width: min(360px, 92%);
+  height: 34px;
+  margin: 8px auto 16px;
+
+  padding: 0 12px;
+  border: 2px solid #111;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
-.card-buttons .reagendar {
-    background: #007bff;
-    color: white;
+
+.search-wrap i {
+  font-size: 1rem;
+  opacity: 0.8;
 }
+
+.search-wrap input {
+  border: none;
+  outline: none;
+  flex: 1;
+  height: 100%;
+  font-size: 14px;
+  background: transparent;
+}
+
+.search-wrap #clearBusca {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0 4px;
+}
+.search-wrap #clearBusca:hover { opacity: 1; }
+
+/* foco: compatível geral */
+.search-wrap:focus-within { border-color: #007bff; }
+/* extra (onde suportar) */
+.search-wrap:has(input:focus) { border-color: #007bff; }
+
+.search-wrap { -webkit-tap-highlight-color: transparent; }

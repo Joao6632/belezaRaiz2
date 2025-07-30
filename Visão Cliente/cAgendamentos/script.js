@@ -69,3 +69,100 @@ function reagendarAgendamento(index) {
     alert("🔄 Você será redirecionado para reagendar este serviço.");
     window.location.href = "../bInicio/Inicio.html";
 }
+
+// nav-active.js
+(function () {
+  function normalizePath(u) {
+    const url = new URL(u, location.origin);
+    let p = url.pathname.replace(/\\/g, "/");
+
+    // trata /pasta/ e /pasta/index.html como a MESMA rota
+    p = p.replace(/\/index\.html?$/i, "");
+    // remove barra final (menos a raiz "/")
+    if (p.length > 1) p = p.replace(/\/+$/, "");
+    // case-insensitive (Windows servers)
+    return p.toLowerCase();
+  }
+
+  function setActiveBottomNav() {
+    const here = normalizePath(location.href);
+    const items = Array.from(document.querySelectorAll(".bottom-nav .bottom-nav-item"));
+
+    if (!items.length) return;
+
+    items.forEach((a) => a.classList.remove("active"));
+
+    // 1) tenta match exato com href
+    let current = items.find((a) => normalizePath(a.href) === here);
+
+    // 2) se não achou, tenta pelo data-route (opcional)
+    if (!current) {
+      current = items.find((a) => {
+        const r = a.getAttribute("data-route");
+        return r && normalizePath(r) === here;
+      });
+    }
+
+    // 3) fallback: se a URL atual estiver dentro da pasta do link
+    // ex.: link -> /cAgendamentos  |  aqui -> /cAgendamentos/detalhe
+    if (!current) {
+      current = items
+        .map((a) => ({ a, path: normalizePath(a.href) }))
+        .filter(({ path }) => here.startsWith(path) && path !== "/")
+        .sort((x, y) => y.path.length - x.path.length) // pega o mais específico
+        .map(({ a }) => a)[0];
+    }
+
+    if (current) current.classList.add("active");
+  }
+
+  // roda quando o DOM estiver pronto
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setActiveBottomNav, { once: true });
+  } else {
+    setActiveBottomNav();
+  }
+})();
+
+
+(function () {
+  const input = document.getElementById('filtroAgendamento');
+  const clear = document.getElementById('clearBusca');
+
+  if (!input) return;
+
+  const cards = () => Array.from(document.querySelectorAll('.card-agendamento'));
+
+  const normalize = (s) =>
+    (s || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')   // tira acento
+      .replace(/\s+/g, ' ')              // normaliza espaços
+      .trim();
+
+  let t;
+  function applyFilter() {
+    const termo = normalize(input.value);
+    cards().forEach((card) => {
+      const serv = card.dataset.servico || card.querySelector('.card-info h3')?.textContent.split('-')[0] || '';
+      const func = card.dataset.funcionario || card.querySelector('.card-info h3')?.textContent.split('-')[1] || '';
+      const haystack = normalize(`${serv} ${func} ${card.textContent}`);
+      const show = termo === '' || haystack.includes(termo);
+      card.style.display = show ? '' : 'none';
+    });
+  }
+
+  function debouncedFilter() {
+    clearTimeout(t);
+    t = setTimeout(applyFilter, 120);
+  }
+
+  input.addEventListener('input', debouncedFilter);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') { input.value = ''; applyFilter(); }});
+  clear?.addEventListener('click', () => { input.value = ''; input.focus(); applyFilter(); });
+
+  // roda na carga (caso venha com valor via autocomplete)
+  applyFilter();
+})();
