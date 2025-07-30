@@ -1,3 +1,14 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const nome = localStorage.getItem('loggedUserName') || '(nome)';
+  const welcomeEl = document.getElementById('welcome-name');
+  if (welcomeEl) {
+    welcomeEl.innerHTML = `Olá<br>${nome}`;
+  }
+});
+
+
+
+
 const barbeiros = {
   "Silvio Santos": "../../imagens/silvio.jpg",
   "Alex Silveira": "../../imagens/alex.jpg",

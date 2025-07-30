@@ -36,6 +36,7 @@ html, body {
   min-height: 100vh;
   position: relative;
   box-sizing: border-box;
+   overflow: visible !important;
 }     
 
 .linha {
@@ -47,15 +48,14 @@ html, body {
 
 h1 {
   font-size: 40px;
-  margin-top: 0;
-  margin-bottom: 10px;
-  margin-left: 10px;
-  margin-right: 10px; /* <- evita ultrapassar a largura da tela */
-  max-width: 100%;
-  overflow-wrap: break-word; /* quebra se passar do limite */
-  word-break: break-word;
+  margin: 10px;
+  white-space: nowrap;
+  overflow-x: auto;       /* 🔥 cria scroll horizontal se o texto não couber */
+  display: block;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: #222;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
 }
-
 .options {
   display: flex;
   flex-direction: column;
