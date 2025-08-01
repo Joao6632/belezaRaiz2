@@ -1,8 +1,21 @@
+// ============================
+// VALIDAÇÃO DE LOGIN + EXIBIR NOME
+// ============================
+
 document.addEventListener('DOMContentLoaded', () => {
-  const nome = localStorage.getItem('loggedUserName') || '(nome)';
+  // 🔥 pega usuário logado do localStorage
+  const userLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+  
+  // ✅ se não existe, manda pra tela de login
+  if (!userLogado || !userLogado.nome) {
+    window.location.href = '../aLogin/index.html';
+    return;
+  }
+
+  // ✅ exibe o nome na home
   const welcomeEl = document.getElementById('welcome-name');
   if (welcomeEl) {
-    welcomeEl.innerHTML = `Olá<br>${nome}`;
+    welcomeEl.innerHTML = `Olá, <br>${userLogado.nome}!`;
   }
 });
 
@@ -287,24 +300,30 @@ function salvarAgendamento() {
   const agendamentoEdicao = JSON.parse(localStorage.getItem("agendamentoEdicao"));
   if (agendamentoEdicao) {
       agendamentos[agendamentoEdicao.index] = {
-          titulo: `${servicoNome} - ${barbeiroNome}`,
-          imagem: servicoImg,
-          duracao,
-          data: dataSelecionada,
-          horario: horaSelecionada,
-          barbeiro: barbeiroNome
-      };
+    titulo: `${servicoNome} - ${barbeiroNome}`,
+    imagem: servicoImg,
+    duracao,
+    data: dataSelecionada,
+    horario: horaSelecionada,
+    barbeiro: barbeiroNome,
+    idBarbeiro: barbeiroNome,
+    status: agendamentoEdicao.status || "pendente" // mantém status
+};
+
       localStorage.removeItem("agendamentoEdicao");
   } else {
-      agendamentos.push({
-          titulo: `${servicoNome} - ${barbeiroNome}`,
-          imagem: servicoImg,
-          duracao,
-          data: dataSelecionada,
-          horario: horaSelecionada,
-          barbeiro: barbeiroNome
-      });
-  }
+    agendamentos.push({
+        titulo: `${servicoNome} - ${barbeiroNome}`,
+        imagem: servicoImg,
+        duracao,
+        data: dataSelecionada,
+        horario: horaSelecionada,
+        barbeiro: barbeiroNome,
+        idBarbeiro: barbeiroNome,   // 🔥 identifica quem é o dono do agendamento
+        status: "pendente"         // 🔥 agora sabemos se já foi realizado
+    });
+}
+
 
   horariosIndisponiveis.push(`${barbeiroNome}-${dataSelecionada}-${horaSelecionada}`);
   localStorage.setItem("horariosIndisponiveis", JSON.stringify(horariosIndisponiveis));

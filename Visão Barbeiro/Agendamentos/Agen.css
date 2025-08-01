@@ -1,0 +1,197 @@
+/* 🔧 Reset global */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 🔧 Travar scroll do documento; só a área branca rola */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background-color: #d9d9d9;
+}
+
+/* 🔹 Fundo cinza como wrapper */
+.fundo-cinza {
+  background-color: #d9d9d9;
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🔹 Logo centralizada */
+.logo {
+  width: 120px;
+  display: block;
+  margin: 0 auto;
+}
+
+/* 🔹 Área branca — única que rola */
+.area-branca {
+  background-color: white;
+  border-top-left-radius: 80px;
+  padding: 30px 18px calc(60px + env(safe-area-inset-bottom) + 24px);
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.area-branca::-webkit-scrollbar { width: 6px; }
+.area-branca::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+/* 🔹 Título */
+h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 18px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* 🔹 Linha divisória */
+.linha {
+  width: 100%;
+  height: 2px;
+  background: #a3a3a3;
+  margin: 0 auto 12px;
+}
+
+/* 🔹 Card de Agendamento */
+.card-agendamento {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f2f2f2;
+  border-radius: 12px;
+  padding: 12px;
+  color: #333;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+.card-agendamento img {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.card-info { flex: 1; }
+.card-info h3 {
+  font-size: 15px;
+  margin: 0 0 4px;
+  font-weight: bold;
+  color: #222;
+}
+.card-info p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+/* 🔹 Botão "Marcar como Realizado" */
+button.realizado {
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+button.realizado:hover { background: #e0e0e0; }
+button.realizado:active { background: #d0d0d0; transform: scale(0.96); }
+
+/* 🔹 Filtro de Data */
+.filtro-data {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px auto 20px;
+  width: 100%;
+}
+.filtro-data input[type="date"] {
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 14px;
+  background: #fff;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.2s;
+}
+.filtro-data input[type="date"]:focus { border-color: #007bff; outline: none; }
+.filtro-data button {
+  border: none;
+  border-radius: 20px;
+  background: #f5f5f5;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.filtro-data button:hover { background: #e0e0e0; }
+.filtro-data button:active { background: #d0d0d0; transform: scale(0.96); }
+
+
+/* Bottom Navigation Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 998;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-grow: 1;
+  color: var(--color-text, #333) !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item i { font-size: 1.5rem; }
+.bottom-nav-item span { font-size: 0.75rem; }
+
+/* NÃO pintar no toque/foco/hover */
+.bottom-nav-item:hover,
+.bottom-nav-item:focus,
+.bottom-nav-item:active {
+  color: var(--color-text, #333) !important;
+}
+
+/* Só o realmente ativo é azul */
+.bottom-nav-item.active,
+.bottom-nav-item.active:hover,
+.bottom-nav-item.active:focus,
+.bottom-nav-item.active:active {
+  color: var(--color-primary, #007bff) !important;
+}
+
+/* 🔹 Animação suave ao carregar os cards */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
