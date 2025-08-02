@@ -16,14 +16,25 @@ function carregarAgendamentos() {
     const container = document.getElementById("agendamentosPendentes");
     container.innerHTML = "";
 
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+    if (!usuarioLogado) {
+        window.location.href = "../../aLogin/index.html";
+        return;
+    }
+
     let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-    if (agendamentos.length === 0) {
+    // ✅ Mostra apenas agendamentos PENDENTES do cliente logado
+    const pendentes = agendamentos.filter(ag =>
+        ag.status !== "realizado" && ag.usuarioId === usuarioLogado.id
+    );
+
+    if (pendentes.length === 0) {
         container.innerHTML = "<p style='text-align:center;color:gray;'>Nenhum agendamento pendente</p>";
         return;
     }
 
-    agendamentos.forEach((agendamento, index) => {
+    pendentes.forEach((agendamento, index) => {
         const card = document.createElement("div");
         card.classList.add("card-agendamento");
 
@@ -44,18 +55,40 @@ function carregarAgendamentos() {
     });
 }
 
+
 // ============================
 // CANCELAR AGENDAMENTO
 // ============================
 function cancelarAgendamento(index) {
     if (confirm("❌ Tem certeza que deseja cancelar este agendamento?")) {
         let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+        let horariosIndisponiveis = JSON.parse(localStorage.getItem("horariosIndisponiveis")) || [];
+
+        // 🔹 Pega o agendamento que vai ser removido
+        const agendamentoCancelado = agendamentos[index];
+        if (!agendamentoCancelado) return;
+
+        const barbeiro = agendamentoCancelado.barbeiro;
+        const data = agendamentoCancelado.data;
+        const horario = agendamentoCancelado.horario;
+
+        // 🔹 Remove o horário do array de indisponíveis (formato usado no agendamento)
+        horariosIndisponiveis = horariosIndisponiveis.filter(
+            h => h !== `${barbeiro}-${data}-${horario}`
+        );
+
+        // 🔹 Atualiza o localStorage
+        localStorage.setItem("horariosIndisponiveis", JSON.stringify(horariosIndisponiveis));
+
+        // 🔹 Remove o agendamento
         agendamentos.splice(index, 1);
         localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
-        alert("✅ Agendamento cancelado com sucesso!");
+
+        alert("✅ Agendamento cancelado e horário liberado!");
         carregarAgendamentos();
     }
 }
+
 
 // ============================
 // REAGENDAR (mantém agendamento antigo até confirmar novo)

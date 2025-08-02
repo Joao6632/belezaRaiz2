@@ -284,15 +284,17 @@ function selecionarHorario(hora) {
   salvarEstadoAtual();
 }
 
-// ============================
-// SALVAR AGENDAMENTO
-// ============================
 
+// ============================
+// SALVAR AGENDAMENTO (COM USUÁRIO)
+// ============================
 function salvarAgendamento() {
   const barbeiroNome = btnBarbeiro.dataset.nome;
   const servicoNome = btnServico.dataset.nome;
   const servicoImg = btnServico.dataset.img;
   const duracao = btnServico.dataset.duracao;
+
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
 
   let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
@@ -300,36 +302,40 @@ function salvarAgendamento() {
   const agendamentoEdicao = JSON.parse(localStorage.getItem("agendamentoEdicao"));
   if (agendamentoEdicao) {
       agendamentos[agendamentoEdicao.index] = {
-    titulo: `${servicoNome} - ${barbeiroNome}`,
-    imagem: servicoImg,
-    duracao,
-    data: dataSelecionada,
-    horario: horaSelecionada,
-    barbeiro: barbeiroNome,
-    idBarbeiro: barbeiroNome,
-    status: agendamentoEdicao.status || "pendente" // mantém status
-};
-
-      localStorage.removeItem("agendamentoEdicao");
-  } else {
-    agendamentos.push({
         titulo: `${servicoNome} - ${barbeiroNome}`,
         imagem: servicoImg,
         duracao,
         data: dataSelecionada,
         horario: horaSelecionada,
         barbeiro: barbeiroNome,
-        idBarbeiro: barbeiroNome,   // 🔥 identifica quem é o dono do agendamento
-        status: "pendente"         // 🔥 agora sabemos se já foi realizado
-    });
-}
+        idBarbeiro: barbeiroNome,
+        usuarioId: usuarioLogado?.id || usuarioLogado?.nome,  // 🔥 ID do cliente
+        usuarioNome: usuarioLogado?.nome || "Cliente",       // 🔥 Nome do cliente
+        status: agendamentoEdicao.status || "pendente"
+      };
 
+      localStorage.removeItem("agendamentoEdicao");
+  } else {
+    agendamentos.push({
+      titulo: `${servicoNome} - ${barbeiroNome}`,
+      imagem: servicoImg,
+      duracao,
+      data: dataSelecionada,
+      horario: horaSelecionada,
+      barbeiro: barbeiroNome,
+      idBarbeiro: barbeiroNome,
+      usuarioId: usuarioLogado?.id || usuarioLogado?.nome,  // 🔥 ID do cliente
+      usuarioNome: usuarioLogado?.nome || "Cliente",       // 🔥 Nome do cliente
+      status: "pendente"
+    });
+  }
 
   horariosIndisponiveis.push(`${barbeiroNome}-${dataSelecionada}-${horaSelecionada}`);
   localStorage.setItem("horariosIndisponiveis", JSON.stringify(horariosIndisponiveis));
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
   localStorage.removeItem("estadoAgendamento");
 }
+
 
 // ✅ Carregar estado ao abrir
 document.addEventListener("DOMContentLoaded", carregarEstadoSalvo);

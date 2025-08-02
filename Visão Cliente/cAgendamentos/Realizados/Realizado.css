@@ -7,9 +7,8 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;           /* ✅ garante altura base para o flex */
-  max-height: 100dvh;     /* ✅ mais estável em mobile */
-  overflow: hidden;       /* ✅ trava o body/html */
+  height: 100dvh;          /* mais estável em mobile */
+  overflow: hidden;        /* <- trava o body/html */
   font-family: Arial, sans-serif;
   background-color: #d9d9d9;
 }
@@ -17,14 +16,13 @@ html, body {
 /* 🔹 Fundo cinza como wrapper flex (necessário p/ o overflow interno funcionar) */
 .fundo-cinza {
   background-color: #d9d9d9;
-  height: 100%;           /* ✅ altura fixa */
+  min-height: 100%;
   width: 100%;
   position: relative;
-  display: flex;          /* ✅ flex permite que a área branca ocupe o restante */
+  display: flex;           /* permite a área branca ocupar o restante e rolar */
   flex-direction: column;
   padding-top: 0;
   margin-top: 0;
-  overflow: hidden;       /* 🔹 garante que só a área branca role */
 }
 
 /* 🔹 Logo centralizada */
@@ -39,16 +37,16 @@ html, body {
 .area-branca {
   background-color: white;
   border-top-left-radius: 80px;
-  padding: 30px 18px calc(60px + env(safe-area-inset-bottom) + 24px);
+  padding: 30px 18px calc(60px + env(safe-area-inset-bottom) + 24px); /* espaço pra bottom nav */
   width: 100%;
-  flex: 1 1 auto;         /* ✅ ocupa o espaço restante */
-  min-height: 0;          /* ✅ crucial p/ overflow no flex container */
+  flex: 1 1 auto;          /* ocupa o resto da tela */
+  min-height: 0;           /* crucial p/ overflow no flex container */
   position: relative;
-  overflow-y: auto;       /* ✅ só aqui rola */
+  overflow-y: auto;        /* ← só aqui rola */
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch; /* suavidade no iOS */
+  overscroll-behavior: contain;      /* evita “vazar” pro body */
+  scrollbar-width: thin;             /* Firefox */
 }
 
 /* Scroll bonito no Chrome */
@@ -69,13 +67,16 @@ html, body {
   height: 2px;
   background: rgb(163, 163, 163);
   margin-top: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 12px; /* afasta a linha dos cards */
 }
 
 /* 🔹 Título */
 h1 {
   font-size: 40px;
-  margin: 0 10px 10px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -109,19 +110,20 @@ h1 {
 .bottom-nav-item i { font-size: 1.5rem; }
 .bottom-nav-item span { font-size: 0.75rem; }
 
+/* NÃO pintar no toque/foco/hover */
 .bottom-nav-item:hover,
 .bottom-nav-item:focus,
 .bottom-nav-item:active {
   color: var(--color-text, #333) !important;
 }
 
+/* Só o realmente ativo é azul */
 .bottom-nav-item.active,
 .bottom-nav-item.active:hover,
 .bottom-nav-item.active:focus,
 .bottom-nav-item.active:active {
   color: var(--color-primary, #007bff) !important;
 }
-
 /* 🔹 Título centralizado */
 .header-titulo {
   display: flex;
@@ -143,12 +145,12 @@ h1 {
   margin: 0;
 }
 
-/* 🔹 Card de Agendamento */
+/* 🔹 Card de Agendamento (fundo cinza claro) */
 .card-agendamento {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f2f2f2;
+  background: #f2f2f2; /* cinza claro */
   border-radius: 12px;
   padding: 12px;
   color: #333;
@@ -198,16 +200,18 @@ h1 {
 .card-buttons .reagendar { background: #007bff; color: white; }
 .card-buttons .reagendar:hover { background: #005dc3; }
 
+
 /* 🔎 Barra de busca (menor e sticky) */
 .search-wrap {
-  position: relative;
-  top: 8px;
+  position: sticky;        /* fica visível enquanto rola os cards */
+  top: 8px;                /* distância do topo da .area-branca */
   z-index: 5;
 
   display: flex;
   align-items: center;
   gap: 8px;
 
+  /* menor e centralizada */
   width: min(360px, 92%);
   height: 34px;
   margin: 8px auto 16px;
@@ -219,7 +223,10 @@ h1 {
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
-.search-wrap i { font-size: 1rem; opacity: 0.8; }
+.search-wrap i {
+  font-size: 1rem;
+  opacity: 0.8;
+}
 
 .search-wrap input {
   border: none;
@@ -241,22 +248,9 @@ h1 {
 }
 .search-wrap #clearBusca:hover { opacity: 1; }
 
+/* foco: compatível geral */
 .search-wrap:focus-within { border-color: #007bff; }
+/* extra (onde suportar) */
 .search-wrap:has(input:focus) { border-color: #007bff; }
-.search-wrap { -webkit-tap-highlight-color: transparent; }
 
-.btn-floating {
-  position: fixed;
-  bottom: 70px;           /* acima da bottom-nav */
-  right: 16px;
-  background: #007bff;
-  color: white;
-  padding: 12px 18px;
-  border-radius: 999px;
-  font-weight: bold;
-  text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  z-index: 999;
-  transition: 0.2s;
-}
-.btn-floating:hover { background: #005dc3; }
+.search-wrap { -webkit-tap-highlight-color: transparent; }
