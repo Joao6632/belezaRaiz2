@@ -94,3 +94,46 @@ function carregarRealizados(usuario) {
         lista.appendChild(card);
     });
 }
+
+(function () {
+    const input = document.getElementById('filtroAgendamento');
+    const clear = document.getElementById('clearBusca');
+  
+    if (!input) return;
+  
+    const cards = () => Array.from(document.querySelectorAll('.card-agendamento'));
+  
+    const normalize = (s) =>
+      (s || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')   // tira acento
+        .replace(/\s+/g, ' ')              // normaliza espaços
+        .trim();
+  
+    let t;
+    function applyFilter() {
+      const termo = normalize(input.value);
+      cards().forEach((card) => {
+        const serv = card.dataset.servico || card.querySelector('.card-info h3')?.textContent.split('-')[0] || '';
+        const func = card.dataset.funcionario || card.querySelector('.card-info h3')?.textContent.split('-')[1] || '';
+        const haystack = normalize(`${serv} ${func} ${card.textContent}`);
+        const show = termo === '' || haystack.includes(termo);
+        card.style.display = show ? '' : 'none';
+      });
+    }
+  
+    function debouncedFilter() {
+      clearTimeout(t);
+      t = setTimeout(applyFilter, 120);
+    }
+  
+    input.addEventListener('input', debouncedFilter);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Escape') { input.value = ''; applyFilter(); }});
+    clear?.addEventListener('click', () => { input.value = ''; input.focus(); applyFilter(); });
+  
+    // roda na carga (caso venha com valor via autocomplete)
+    applyFilter();
+  })();
+  

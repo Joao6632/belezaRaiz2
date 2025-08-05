@@ -1,4 +1,6 @@
-// 🔹 Normaliza login (igual ao seu código original)
+// ==== Utils ====
+
+// 🔹 Normaliza login (email lowercase ou telefone com só dígitos)
 function normalizeLogin(value) {
   const v = String(value || '').trim();
   if (!v) return '';
@@ -6,40 +8,81 @@ function normalizeLogin(value) {
   return v.replace(/\D/g, '');
 }
 
-// 🔹 Carrega usuários salvos
+// 🔹 Máscara de telefone brasileira
+function maskPhoneBR(digits) {
+  const d = digits.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+// 🔹 Carrega usuários do LocalStorage
 function loadUsers() {
   return JSON.parse(localStorage.getItem('users') || '[]');
 }
 
-// 🔹 Garante que os barbeiros fixos existam no LocalStorage
+// 🔹 Salva usuários
+function saveUsers(users) {
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+// 🔹 Garante que barbeiros fixos existam
 function seedBarbeiros() {
   let users = loadUsers();
-
-  // Evita duplicar barbeiros se já estiverem cadastrados
   if (users.some(u => u.tipo === "barbeiro")) return;
 
-  // Adiciona os 3 barbeiros fixos
   users.push(
     { nome: "Silvio Santos", login: "silvio@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro1" },
     { nome: "Alex Silveira", login: "alex@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro2" },
     { nome: "Daniel Zolin", login: "daniel@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro3" }
   );
 
-  localStorage.setItem("users", JSON.stringify(users));
+  saveUsers(users);
 }
 
-seedBarbeiros(); // 🔥 garante que barbeiros estão cadastrados
-
-// 🔹 Evento do botão de login
+// ==== Lógica do Login ====
 document.addEventListener('DOMContentLoaded', () => {
+  seedBarbeiros(); // garante barbeiros no LocalStorage
+
+  const loginInput = document.getElementById('loginInput');
+  const passwordInput = document.getElementById('senhaInput');
   const loginBtn = document.querySelector('.login-btn');
-  const inputs = document.querySelectorAll('.input-field input');
 
-  if (!loginBtn || inputs.length < 2) return;
+  if (!loginInput || !passwordInput || !loginBtn) return;
 
-  const loginInput = inputs[0];
-  const passwordInput = inputs[1];
+  // 🔹 Máscara dinâmica no input
+  loginInput.addEventListener('input', () => {
+    let val = loginInput.value.trim();
 
+    if (!val) {
+      loginInput.value = '';
+      return;
+    }
+
+    if (val.includes('@')) {
+      loginInput.dataset.type = 'email';
+      loginInput.setAttribute('inputmode', 'email');
+      loginInput.maxLength = 254;
+      loginInput.value = val;
+      return;
+    }
+
+    if (/^[\d()\s\-]*$/.test(val)) {
+      const digits = val.replace(/\D/g, '');
+      loginInput.dataset.type = 'phone';
+      loginInput.setAttribute('inputmode', 'tel');
+      loginInput.maxLength = 16;
+      loginInput.value = maskPhoneBR(digits);
+    } else {
+      loginInput.dataset.type = 'email';
+      loginInput.setAttribute('inputmode', 'email');
+      loginInput.maxLength = 254;
+      loginInput.value = val;
+    }
+  });
+
+  // 🔹 Ao clicar em login
   loginBtn.addEventListener('click', (e) => {
     e.preventDefault();
 
@@ -58,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const users = loadUsers();
-    const user = users.find(u => u.login === loginKey);
+    const user = users.find(u => normalizeLogin(u.login) === loginKey);
 
     if (!user) {
       alert('Conta não encontrada.');
@@ -72,11 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ✅ Login OK
     alert(`Bem-vindo, ${user.nome}!`);
-
-    // 🔹 Salva todos os dados do usuário logado
     localStorage.setItem("usuarioLogado", JSON.stringify(user));
 
-    // 🔹 Redireciona baseado no tipo
+    // 🔹 Redirecionamento baseado no tipo
     if (user.tipo === "barbeiro") {
       window.location.href = "../../Visão Barbeiro/Agendamentos/Agen.html";
     } else {

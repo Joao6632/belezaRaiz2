@@ -297,25 +297,35 @@ function salvarAgendamento() {
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
 
   let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+  let horariosIndisponiveis = JSON.parse(localStorage.getItem("horariosIndisponiveis")) || [];
 
-  // ✅ Verifica se está reagendando
+  // Verifica se está reagendando (editando)
   const agendamentoEdicao = JSON.parse(localStorage.getItem("agendamentoEdicao"));
   if (agendamentoEdicao) {
-      agendamentos[agendamentoEdicao.index] = {
-        titulo: `${servicoNome} - ${barbeiroNome}`,
-        imagem: servicoImg,
-        duracao,
-        data: dataSelecionada,
-        horario: horaSelecionada,
-        barbeiro: barbeiroNome,
-        idBarbeiro: barbeiroNome,
-        usuarioId: usuarioLogado?.id || usuarioLogado?.nome,  // 🔥 ID do cliente
-        usuarioNome: usuarioLogado?.nome || "Cliente",       // 🔥 Nome do cliente
-        status: agendamentoEdicao.status || "pendente"
-      };
+    // Remove o horário antigo da lista de indisponíveis para liberar a vaga
+    const horarioAntigo = `${agendamentoEdicao.barbeiro}-${agendamentoEdicao.data}-${agendamentoEdicao.horario}`;
+    const indexHorario = horariosIndisponiveis.indexOf(horarioAntigo);
+    if (indexHorario > -1) {
+      horariosIndisponiveis.splice(indexHorario, 1);
+    }
 
-      localStorage.removeItem("agendamentoEdicao");
+    // Atualiza o agendamento na posição certa
+    agendamentos[agendamentoEdicao.index] = {
+      titulo: `${servicoNome} - ${barbeiroNome}`,
+      imagem: servicoImg,
+      duracao,
+      data: dataSelecionada,
+      horario: horaSelecionada,
+      barbeiro: barbeiroNome,
+      idBarbeiro: barbeiroNome,
+      usuarioId: usuarioLogado?.id || usuarioLogado?.nome,
+      usuarioNome: usuarioLogado?.nome || "Cliente",
+      status: agendamentoEdicao.status || "pendente"
+    };
+
+    localStorage.removeItem("agendamentoEdicao");
   } else {
+    // Novo agendamento
     agendamentos.push({
       titulo: `${servicoNome} - ${barbeiroNome}`,
       imagem: servicoImg,
@@ -324,17 +334,21 @@ function salvarAgendamento() {
       horario: horaSelecionada,
       barbeiro: barbeiroNome,
       idBarbeiro: barbeiroNome,
-      usuarioId: usuarioLogado?.id || usuarioLogado?.nome,  // 🔥 ID do cliente
-      usuarioNome: usuarioLogado?.nome || "Cliente",       // 🔥 Nome do cliente
+      usuarioId: usuarioLogado?.id || usuarioLogado?.nome,
+      usuarioNome: usuarioLogado?.nome || "Cliente",
       status: "pendente"
     });
   }
 
+  // Marca o novo horário como indisponível
   horariosIndisponiveis.push(`${barbeiroNome}-${dataSelecionada}-${horaSelecionada}`);
+
+  // Salva tudo no localStorage
   localStorage.setItem("horariosIndisponiveis", JSON.stringify(horariosIndisponiveis));
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
   localStorage.removeItem("estadoAgendamento");
 }
+
 
 
 // ✅ Carregar estado ao abrir

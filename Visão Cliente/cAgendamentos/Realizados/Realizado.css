@@ -254,3 +254,19 @@ h1 {
 .search-wrap:has(input:focus) { border-color: #007bff; }
 
 .search-wrap { -webkit-tap-highlight-color: transparent; }
+
+.btn-floating {
+  position: fixed;
+  bottom: 70px;           /* acima da bottom-nav */
+  right: 16px;
+  background: #007bff;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 999;
+  transition: 0.2s;
+}
+.btn-floating:hover { background: #005dc3; }

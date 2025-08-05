@@ -94,15 +94,16 @@ function cancelarAgendamento(index) {
 // REAGENDAR (mantém agendamento antigo até confirmar novo)
 // ============================
 function reagendarAgendamento(index) {
-    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
-    const agendamento = agendamentos[index];
-    if (!agendamento) return;
+  let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+  const agendamento = agendamentos[index];
+  if (!agendamento) return;
 
-    localStorage.setItem("agendamentoEdicao", JSON.stringify({ index, ...agendamento }));
-    alert("🔄 Você será redirecionado para reagendar este serviço.");
-    window.location.href = "../bInicio/Inicio.html";
+  // Salva o índice e os dados do agendamento antigo
+  localStorage.setItem("agendamentoEdicao", JSON.stringify({ index, ...agendamento }));
+
+  alert("🔄 Você será redirecionado para reagendar este serviço.");
+  window.location.href = "../bInicio/Inicio.html";
 }
-
 // nav-active.js
 (function () {
   function normalizePath(u) {

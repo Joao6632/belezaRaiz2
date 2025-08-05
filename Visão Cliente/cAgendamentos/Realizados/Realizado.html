@@ -27,6 +27,18 @@
             </div>
 
             <div class="linha"></div>
+
+             <!-- 🔎 Barra de busca (em cima dos cards) -->
+             <div class="search-wrap">
+              <i class="bi bi-funnel"></i>
+              <input
+                  type="search"
+                  id="filtroAgendamento"
+                  placeholder="Pesquise por serviço ou funcionário"
+            autocomplete="off"
+              />
+<button id="clearBusca" aria-label="Limpar busca">&times;</button>
+</div>
     <!-- ✅ Container para os cards -->
     <div id="lista-realizados"></div>
 
@@ -61,5 +73,6 @@
     });
   });
 </script>
+<a href="../index.html" class="btn-floating">Ver Pendentes</a>
 </body>
 </html>
