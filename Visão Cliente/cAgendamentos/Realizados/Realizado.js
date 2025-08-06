@@ -1,52 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
   const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
-  // ✅ Verifica login
   if (!usuarioLogado) {
     window.location.href = '../../aLogin/index.html';
     return;
   }
 
-  // ✅ Define título
   document.querySelector('h2').textContent = 'Serviços Realizados';
-
-  // ✅ Carrega agendamentos
   carregarRealizados(usuarioLogado);
-
-  // ✅ Marca ícone ativo
-  const navLinks = document.querySelectorAll('.bottom-nav-item');
-  const currentPage = window.location.pathname.split('/').pop();
-  navLinks.forEach((link) => {
-    const linkPage = link.getAttribute('href').split('/').pop();
-    if (currentPage === linkPage) link.classList.add('active');
-  });
+  marcarPaginaAtual();
+  ativarFiltroBusca();
 });
 
-// ============================
-// 🔹 Carrega agendamentos do localStorage
-// ============================
 function loadAgendamentos() {
   return JSON.parse(localStorage.getItem('agendamentos')) || [];
 }
 
-// ============================
-// 🔹 Renderiza serviços realizados
-// ============================
 function carregarRealizados(usuario) {
   const lista = document.getElementById('lista-realizados');
   lista.innerHTML = '';
 
   const agendamentos = loadAgendamentos();
-  const tipo = usuario.tipo ? usuario.tipo.toLowerCase() : 'cliente'; // ✅ assume cliente se não tiver tipo
+  const tipo = usuario.tipo ? usuario.tipo.toLowerCase() : 'cliente';
 
-  console.log('🔍 Usuário logado:', usuario);
-  console.log('🔍 Agendamentos no storage:', agendamentos);
-
-  // ✅ Filtro principal
   const realizados = agendamentos.filter((ag) => {
     const isRealizado = (ag.status || '').toLowerCase() === 'realizado';
-
-    // 🔹 Se for barbeiro → mostra só os dele
     const isDoBarbeiro =
       tipo === 'barbeiro' &&
       ((ag.barbeiro || '').toLowerCase() ===
@@ -55,7 +33,6 @@ function carregarRealizados(usuario) {
           (usuario.nome || '').toLowerCase() ||
         ag.idBarbeiro === usuario.id);
 
-    // 🔹 Se for cliente → mostra só os dele
     const isDoCliente =
       tipo === 'cliente' &&
       (ag.usuarioId === usuario.id ||
@@ -65,21 +42,16 @@ function carregarRealizados(usuario) {
     return isRealizado && (isDoBarbeiro || isDoCliente);
   });
 
-  console.log('✅ Agendamentos filtrados:', realizados);
-
-  // ✅ Se não houver resultados
   if (realizados.length === 0) {
     lista.innerHTML = `<p class="text-center">Nenhum serviço realizado ainda.</p>`;
     return;
   }
 
-  // ✅ Renderiza os cards dinamicamente
   realizados.forEach((ag, i) => {
     const card = document.createElement('div');
     card.className = 'card-agendamento fade-in';
     card.style.animationDelay = `${i * 0.05}s`;
 
-    // ✅ Ajusta o caminho da imagem (corrige ../../ e garante pasta imagens)
     let imgPath = ag.imagem || '';
     if (!imgPath.includes('imagens/')) {
       imgPath = `../../../imagens/${imgPath}`;
@@ -87,22 +59,38 @@ function carregarRealizados(usuario) {
     imgPath = imgPath.replace('../../', '../../../');
 
     card.innerHTML = `
-    <img src="${imgPath}" alt="${ag.titulo}" onerror="this.src='../../../imagens/placeholder.png'">
-    <div class="card-info">
-        <h3>${ag.titulo}</h3>
+      <img src="${imgPath}" alt="${ag.titulo}" onerror="this.src='../../../imagens/placeholder.png'">
+      <div class="card-info">
+        <div class="avaliar-topo">
+          <h3>${ag.titulo}</h3>
+          <button class="btn-avaliar">Avaliar</button>
+        </div>
         <p><b>Data:</b> ${ag.data} - <b>Hora:</b> ${ag.horario}</p>
         <p><b>Status:</b> ✅ Realizado</p>
-        <button class="btn-avaliar mt-2">Avaliar</button>
-    </div>
-`;
+      </div>
+    `;
     lista.appendChild(card);
+
+    const btnAvaliar = card.querySelector('.btn-avaliar');
+    btnAvaliar.addEventListener('click', () => {
+      const nomeBarbeiro = ag.titulo.split(' - ')[1] || ag.barbeiro || '';
+      abrirModalAvaliacao(nomeBarbeiro);
+    });
   });
 }
 
-(function () {
+function marcarPaginaAtual() {
+  const navLinks = document.querySelectorAll('.bottom-nav-item');
+  const currentPage = window.location.pathname.split('/').pop();
+  navLinks.forEach((link) => {
+    const linkPage = link.getAttribute('href').split('/').pop();
+    if (currentPage === linkPage) link.classList.add('active');
+  });
+}
+
+function ativarFiltroBusca() {
   const input = document.getElementById('filtroAgendamento');
   const clear = document.getElementById('clearBusca');
-
   if (!input) return;
 
   const cards = () =>
@@ -113,8 +101,8 @@ function carregarRealizados(usuario) {
       .toString()
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // tira acento
-      .replace(/\s+/g, ' ') // normaliza espaços
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
   let t;
@@ -153,6 +141,99 @@ function carregarRealizados(usuario) {
     applyFilter();
   });
 
-  // roda na carga (caso venha com valor via autocomplete)
   applyFilter();
-})();
+}
+
+// ============================
+// 🔹 Avaliação / Estrelas
+// ============================
+let avaliacaoAtual = 0;
+let barbeiroAtual = '';
+
+function abrirModalAvaliacao(idBarbeiro, nomeBarbeiro) {
+  barbeiroAtual = idBarbeiro;
+  nomeExibicao = nomeBarbeiro;
+  avaliacaoAtual = 0;
+  document.getElementById('modalAvaliacao').classList.remove('hidden');
+  gerarEstrelas();
+}
+
+function fecharModal() {
+  document.getElementById('modalAvaliacao').classList.add('hidden');
+}
+
+function gerarEstrelas() {
+  const container = document.getElementById('estrelasContainer');
+  container.innerHTML = '';
+
+  for (let i = 1; i <= 5; i++) {
+    const estrela = document.createElement('span');
+    estrela.innerText = '★';
+    estrela.dataset.valor = i;
+    estrela.classList.add('estrela');
+    estrela.onclick = () => selecionarEstrelas(i);
+    container.appendChild(estrela);
+  }
+}
+
+function selecionarEstrelas(qtd) {
+  avaliacaoAtual = qtd;
+  const estrelas = document.querySelectorAll('#estrelasContainer span');
+  estrelas.forEach((el, idx) => {
+    el.classList.toggle('selecionada', idx < qtd);
+  });
+}
+
+function confirmarAvaliacao() {
+  const barbeiro = barbeiroAtual; // nome do barbeiro vindo do clique
+  const nota = avaliacaoAtual;    // nota capturada com estrelas
+  const chave = 'avaliacoesBarbeiros';
+
+  if (!barbeiro || !nota || nota < 1 || nota > 5) {
+    alert('Escolha uma nota entre 1 e 5 clicando nas estrelas!');
+    return;
+  }
+
+  const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
+  if (!avaliacoes[barbeiro]) {
+    avaliacoes[barbeiro] = [];
+  }
+
+  avaliacoes[barbeiro].push(nota);
+  localStorage.setItem(chave, JSON.stringify(avaliacoes));
+
+  fecharModal(); // Corrigido! O ID certo já está lá dentro
+
+  atualizarNotasBarbeiros(); // Agora vai atualizar sim
+}
+
+function atualizarNotasBarbeiros() {
+  const chave = 'avaliacoesBarbeiros';
+  const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
+  const barbeiros = document.querySelectorAll('.barbeiro-card');
+
+  barbeiros.forEach(barbeiro => {
+    const id = barbeiro.dataset.id;
+    const avaliacoesDoBarbeiro = avaliacoes[id] || [];
+    const media = calcularMedia(avaliacoesDoBarbeiro);
+
+    let spanEstrela = barbeiro.querySelector('.estrela');
+
+    if (!spanEstrela) {
+      spanEstrela = document.createElement('span');
+      spanEstrela.classList.add('estrela');
+      barbeiro.querySelector('.info').appendChild(spanEstrela);
+    }
+
+    spanEstrela.textContent = avaliacoesDoBarbeiro.length > 0
+      ? `⭐ ${media.toFixed(1)}`
+      : '⭐ Sem avaliações';
+  });
+}
+
+function calcularMedia(avaliacoes) {
+  if (!avaliacoes || avaliacoes.length === 0) return 0;
+  const soma = avaliacoes.reduce((acc, val) => acc + val, 0);
+  return soma / avaliacoes.length;
+  
+}

@@ -564,3 +564,33 @@ if (agendamentoEdicao) {
     setActiveBottomNav();
   }
 })();
+
+function atualizarNotasBarbeiros() {
+  const chave = 'avaliacoesBarbeiros';
+  const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
+
+  const barbeiros = document.querySelectorAll('.barbeiro-card');
+
+  barbeiros.forEach(card => {
+    const id = card.dataset.id;
+    const avaliacoesDoBarbeiro = avaliacoes[id] || [];
+
+    const media = calcularMedia(avaliacoesDoBarbeiro);
+
+    let spanEstrela = card.querySelector('.estrela');
+
+    if (!spanEstrela) {
+      spanEstrela = document.createElement('span');
+      spanEstrela.classList.add('estrela');
+      card.querySelector('.info').appendChild(spanEstrela);
+    }
+
+    spanEstrela.textContent = avaliacoesDoBarbeiro.length > 0
+      ? `⭐ ${media.toFixed(1)}`
+      : '⭐ Sem avaliações';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  atualizarNotasBarbeiros();
+});

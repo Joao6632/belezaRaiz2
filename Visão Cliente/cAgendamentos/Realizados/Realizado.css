@@ -269,23 +269,80 @@ h1 {
   z-index: 999;
   transition: 0.2s;
 }
-.btn-floating:hover { background: #005dc3; }
+.btn-floating:hover { background: #2d2d2e; }
 
 .btn-avaliar {
-  position: absolute;
-  bottom: 5px;
-  right: 10px;
-  padding: 4px 8px;
-  font-size: 12px;
-  background-color: #ccc;
-  color: #000;
+  background-color: #525252;
+  color: white;
   border: none;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   cursor: pointer;
-  font-weight: 500;
   transition: 0.3s;
 }
 
 .btn-avaliar:hover {
-  background-color: #aaa;
+  background-color: #313131;
+}
+
+.avaliar-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #464646;
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 300px;
+  text-align: center;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.estrelas span {
+  font-size: 40px;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.2s;
+}
+
+.estrelas span.selecionada {
+  color: gold;
+}
+
+.estrela {
+  font-size: 2rem;
+  cursor: pointer;
+  color: gray;
+}
+
+.estrela.selecionada {
+  color: gold;
+}
+
+#modalAvaliacao .modal-content {
+  background-color: #d9d9d9; /* cinza claro */
+  padding: 20px;
+  border-radius: 10px;
 }
