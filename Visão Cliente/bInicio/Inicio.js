@@ -565,6 +565,12 @@ if (agendamentoEdicao) {
   }
 })();
 
+function calcularMedia(avaliacoes) {
+  if (!avaliacoes || avaliacoes.length === 0) return 0;
+  const soma = avaliacoes.reduce((acc, val) => acc + val, 0);
+  return soma / avaliacoes.length;
+}
+
 function atualizarNotasBarbeiros() {
   const chave = 'avaliacoesBarbeiros';
   const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
@@ -572,25 +578,29 @@ function atualizarNotasBarbeiros() {
   const barbeiros = document.querySelectorAll('.barbeiro-card');
 
   barbeiros.forEach(card => {
-    const id = card.dataset.id;
+    const id = card.dataset.id; // Ex: "daniel-zolin"
     const avaliacoesDoBarbeiro = avaliacoes[id] || [];
-
     const media = calcularMedia(avaliacoesDoBarbeiro);
 
+    // Tenta encontrar o span da estrela já existente
     let spanEstrela = card.querySelector('.estrela');
 
+    // Se não existir, cria e adiciona
     if (!spanEstrela) {
       spanEstrela = document.createElement('span');
       spanEstrela.classList.add('estrela');
       card.querySelector('.info').appendChild(spanEstrela);
     }
 
+    // Define o conteúdo com base na existência de avaliações
     spanEstrela.textContent = avaliacoesDoBarbeiro.length > 0
       ? `⭐ ${media.toFixed(1)}`
       : '⭐ Sem avaliações';
   });
 }
 
+// ✅ Chamada garantida ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
   atualizarNotasBarbeiros();
 });
+

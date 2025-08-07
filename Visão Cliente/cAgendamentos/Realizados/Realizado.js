@@ -73,8 +73,10 @@ function carregarRealizados(usuario) {
 
     const btnAvaliar = card.querySelector('.btn-avaliar');
     btnAvaliar.addEventListener('click', () => {
-      const nomeBarbeiro = ag.titulo.split(' - ')[1] || ag.barbeiro || '';
-      abrirModalAvaliacao(nomeBarbeiro);
+      // Passa o ID e o nome do barbeiro para o modal
+      const idBarbeiro = ag.idBarbeiro || '';
+      const nomeBarbeiro = ag.barbeiro || '';
+      abrirModalAvaliacao(idBarbeiro, nomeBarbeiro);
     });
   });
 }
@@ -148,13 +150,15 @@ function ativarFiltroBusca() {
 // 🔹 Avaliação / Estrelas
 // ============================
 let avaliacaoAtual = 0;
-let barbeiroAtual = '';
+let barbeiroAtual = ''; // Deve guardar o ID do barbeiro
 
 function abrirModalAvaliacao(idBarbeiro, nomeBarbeiro) {
   barbeiroAtual = idBarbeiro;
-  nomeExibicao = nomeBarbeiro;
   avaliacaoAtual = 0;
   document.getElementById('modalAvaliacao').classList.remove('hidden');
+  // Opcional: mostrar nome no modal, se tiver elemento para isso
+  const nomeSpan = document.getElementById('nomeBarbeiroModal');
+  if (nomeSpan) nomeSpan.textContent = nomeBarbeiro;
   gerarEstrelas();
 }
 
@@ -185,26 +189,26 @@ function selecionarEstrelas(qtd) {
 }
 
 function confirmarAvaliacao() {
-  const barbeiro = barbeiroAtual; // nome do barbeiro vindo do clique
-  const nota = avaliacaoAtual;    // nota capturada com estrelas
+  const idBarbeiro = barbeiroAtual;
+  const nota = avaliacaoAtual;
   const chave = 'avaliacoesBarbeiros';
 
-  if (!barbeiro || !nota || nota < 1 || nota > 5) {
+  if (!idBarbeiro || !nota || nota < 1 || nota > 5) {
     alert('Escolha uma nota entre 1 e 5 clicando nas estrelas!');
     return;
   }
 
   const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
-  if (!avaliacoes[barbeiro]) {
-    avaliacoes[barbeiro] = [];
+
+  if (!avaliacoes[idBarbeiro]) {
+    avaliacoes[idBarbeiro] = [];
   }
 
-  avaliacoes[barbeiro].push(nota);
+  avaliacoes[idBarbeiro].push(nota);
   localStorage.setItem(chave, JSON.stringify(avaliacoes));
 
-  fecharModal(); // Corrigido! O ID certo já está lá dentro
-
-  atualizarNotasBarbeiros(); // Agora vai atualizar sim
+  fecharModal();
+  atualizarNotasBarbeiros();
 }
 
 function atualizarNotasBarbeiros() {
@@ -235,5 +239,9 @@ function calcularMedia(avaliacoes) {
   if (!avaliacoes || avaliacoes.length === 0) return 0;
   const soma = avaliacoes.reduce((acc, val) => acc + val, 0);
   return soma / avaliacoes.length;
-  
 }
+
+// Chamar atualizarNotasBarbeiros() quando necessário (ex: ao carregar a página, ou depois de avaliar)
+document.addEventListener('DOMContentLoaded', () => {
+  atualizarNotasBarbeiros();
+});
