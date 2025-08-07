@@ -346,3 +346,22 @@ h1 {
   padding: 20px;
   border-radius: 10px;
 }
+
+.estrelas span:hover,
+.estrelas span:hover ~ span {
+  color: gold;
+}
+
+.estrelas span {
+  transition: color 0.2s;
+}
+
+/* Corrige a ordem do preenchimento (da esquerda pra direita) */
+.estrelas {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+}
+.estrelas span {
+  order: -1;
+}

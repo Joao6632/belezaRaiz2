@@ -7,15 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.querySelector('h2').textContent = 'Serviços Realizados';
+
   carregarRealizados(usuarioLogado);
   marcarPaginaAtual();
   ativarFiltroBusca();
 });
 
+// Carrega agendamentos do localStorage
 function loadAgendamentos() {
   return JSON.parse(localStorage.getItem('agendamentos')) || [];
 }
 
+// Função principal que carrega os agendamentos realizados e monta os cards
 function carregarRealizados(usuario) {
   const lista = document.getElementById('lista-realizados');
   lista.innerHTML = '';
@@ -23,8 +26,10 @@ function carregarRealizados(usuario) {
   const agendamentos = loadAgendamentos();
   const tipo = usuario.tipo ? usuario.tipo.toLowerCase() : 'cliente';
 
+  // Filtra apenas realizados e que pertencem ao usuário (cliente ou barbeiro)
   const realizados = agendamentos.filter((ag) => {
     const isRealizado = (ag.status || '').toLowerCase() === 'realizado';
+
     const isDoBarbeiro =
       tipo === 'barbeiro' &&
       ((ag.barbeiro || '').toLowerCase() ===
@@ -46,6 +51,9 @@ function carregarRealizados(usuario) {
     lista.innerHTML = `<p class="text-center">Nenhum serviço realizado ainda.</p>`;
     return;
   }
+
+  // Recupera avaliações feitas para impedir avaliação múltipla
+  const avaliacoesFeitas = JSON.parse(localStorage.getItem('avaliacoesFeitas')) || {};
 
   realizados.forEach((ag, i) => {
     const card = document.createElement('div');
@@ -69,17 +77,32 @@ function carregarRealizados(usuario) {
         <p><b>Status:</b> ✅ Realizado</p>
       </div>
     `;
+
     lista.appendChild(card);
 
     const btnAvaliar = card.querySelector('.btn-avaliar');
-    btnAvaliar.addEventListener('click', () => {
-      // Passa o ID e o nome do barbeiro para o modal
-      const idBarbeiro = ag.idBarbeiro || '';
-      const nomeBarbeiro = ag.barbeiro || '';
-      abrirModalAvaliacao(idBarbeiro, nomeBarbeiro);
-    });
+    const idAgendamento = ag.id || ag.idAgendamento || ag.data + ag.horario + ag.idBarbeiro; // Um ID único para o agendamento
+
+    // Se já avaliou, bloqueia o botão
+    if (avaliacoesFeitas[idAgendamento]) {
+      btnAvaliar.disabled = true;
+      btnAvaliar.textContent = "Avaliado";
+      btnAvaliar.classList.add('avaliado');
+    } else {
+      btnAvaliar.disabled = false;
+      btnAvaliar.textContent = "Avaliar";
+      btnAvaliar.classList.remove('avaliado');
+      btnAvaliar.addEventListener('click', () => {
+        // Passa o ID e nome do barbeiro para o modal
+        const idBarbeiro = ag.idBarbeiro || '';
+        const nomeBarbeiro = ag.barbeiro || '';
+        abrirModalAvaliacao(idBarbeiro, nomeBarbeiro, idAgendamento);
+      });
+    }
   });
 }
+
+// Outras funções normais...
 
 function marcarPaginaAtual() {
   const navLinks = document.querySelectorAll('.bottom-nav-item');
@@ -150,15 +173,19 @@ function ativarFiltroBusca() {
 // 🔹 Avaliação / Estrelas
 // ============================
 let avaliacaoAtual = 0;
-let barbeiroAtual = ''; // Deve guardar o ID do barbeiro
+let barbeiroAtual = ''; // ID do barbeiro
+let agendamentoAtual = ''; // ID do agendamento para controle
 
-function abrirModalAvaliacao(idBarbeiro, nomeBarbeiro) {
+function abrirModalAvaliacao(idBarbeiro, nomeBarbeiro, idAgendamento) {
   barbeiroAtual = idBarbeiro;
+  agendamentoAtual = idAgendamento;
   avaliacaoAtual = 0;
   document.getElementById('modalAvaliacao').classList.remove('hidden');
-  // Opcional: mostrar nome no modal, se tiver elemento para isso
+
+  // Se tiver um span para mostrar nome do barbeiro no modal, atualize
   const nomeSpan = document.getElementById('nomeBarbeiroModal');
   if (nomeSpan) nomeSpan.textContent = nomeBarbeiro;
+
   gerarEstrelas();
 }
 
@@ -183,8 +210,9 @@ function gerarEstrelas() {
 function selecionarEstrelas(qtd) {
   avaliacaoAtual = qtd;
   const estrelas = document.querySelectorAll('#estrelasContainer span');
-  estrelas.forEach((el, idx) => {
-    el.classList.toggle('selecionada', idx < qtd);
+  estrelas.forEach((el) => {
+    const val = Number(el.dataset.valor);
+    el.classList.toggle('selecionada', val <= qtd);
   });
 }
 
@@ -199,16 +227,20 @@ function confirmarAvaliacao() {
   }
 
   const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
-
   if (!avaliacoes[idBarbeiro]) {
     avaliacoes[idBarbeiro] = [];
   }
-
   avaliacoes[idBarbeiro].push(nota);
   localStorage.setItem(chave, JSON.stringify(avaliacoes));
 
+  // Marca o agendamento como avaliado para desabilitar botão
+  const avaliacoesFeitas = JSON.parse(localStorage.getItem('avaliacoesFeitas')) || {};
+  avaliacoesFeitas[agendamentoAtual] = true;
+  localStorage.setItem('avaliacoesFeitas', JSON.stringify(avaliacoesFeitas));
+
   fecharModal();
   atualizarNotasBarbeiros();
+  carregarRealizados(JSON.parse(localStorage.getItem('usuarioLogado'))); // Atualiza botões dos cards
 }
 
 function atualizarNotasBarbeiros() {
@@ -240,8 +272,3 @@ function calcularMedia(avaliacoes) {
   const soma = avaliacoes.reduce((acc, val) => acc + val, 0);
   return soma / avaliacoes.length;
 }
-
-// Chamar atualizarNotasBarbeiros() quando necessário (ex: ao carregar a página, ou depois de avaliar)
-document.addEventListener('DOMContentLoaded', () => {
-  atualizarNotasBarbeiros();
-});
