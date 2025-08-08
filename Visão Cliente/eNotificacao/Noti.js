@@ -22,24 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const div = document.createElement('div');
       div.classList.add('card-agendamento');
   
-      // Define cor do status
-      let corStatus;
-      switch (agendamento.status) {
-        case 'pendente':
-          corStatus = 'red';
-          break;
-        case 'confirmado':
-          corStatus = '#007bff';
-          break;
-        case 'realizado':
-          corStatus = 'green';
-          break;
-        case 'cancelado':
-          corStatus = 'gray';
-          break;
-        default:
-          corStatus = 'black';
-      }
+      // Cria span com classe de status
+      const statusSpan = document.createElement('span');
+      statusSpan.classList.add('status'); // base
+      statusSpan.classList.add(`status-${agendamento.status}`); // ex: status-pendente
+      statusSpan.textContent = agendamento.status;
   
       div.innerHTML = `
         <img src="${agendamento.imagem || 'https://via.placeholder.com/80'}" alt="Serviço" class="agendamento-img">
@@ -48,9 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
           Duração: ${agendamento.duracao}<br>
           Data: ${agendamento.data}<br>
           Horário: ${agendamento.horario}<br>
-          Status: <span style="color: ${corStatus}; font-weight: bold">${agendamento.status}</span>
+          Status: 
         </div>
       `;
+  
+      // Adiciona o span de status depois do "Status: "
+      const infoDiv = div.querySelector('.agendamento-info');
+      infoDiv.appendChild(statusSpan);
   
       notificacoesContainer.appendChild(div);
     });

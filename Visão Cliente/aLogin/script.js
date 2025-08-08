@@ -35,7 +35,8 @@ function seedBarbeiros() {
   users.push(
     { nome: "Silvio Santos", login: "silvio@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro1" },
     { nome: "Alex Silveira", login: "alex@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro2" },
-    { nome: "Daniel Zolin", login: "daniel@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro3" }
+    { nome: "Daniel Zolin", login: "daniel@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro3" },
+    { nome: "CEO João", login: "joaov@barbearia.com", senha: "123456", tipo: "gerente", id: "gerente1" },
   );
 
   saveUsers(users);
@@ -120,8 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔹 Redirecionamento baseado no tipo
     if (user.tipo === "barbeiro") {
       window.location.href = "../../Visão Barbeiro/Agendamentos/Agen.html";
+    } else if (user.tipo === "gerente") {
+      window.location.href = "../../Visão Dono/aInicio/index.html"; // ajuste a rota que quiser
     } else {
-      window.location.href = "../bInicio/inicio.html";
+      window.location.href = "../bInicio/inicio.html"; // cliente ou outro tipo
     }
   });
 });
