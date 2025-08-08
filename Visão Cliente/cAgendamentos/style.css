@@ -260,3 +260,28 @@ h1 {
   transition: 0.2s;
 }
 .btn-floating:hover { background: #005dc3; }
+
+.notificacao-wrapper {
+  position: absolute;
+  top: 20px;         /* distancia do topo */
+  right: 20px;       /* distancia da direita */
+}
+
+.bottom-notif {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: white;
+  text-decoration: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.bottom-notif i {
+  font-size: 20px;
+  color: black;
+}
