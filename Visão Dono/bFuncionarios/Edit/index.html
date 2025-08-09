@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="script.js" defer></script>
+    <title>Beleza Raiz - CEO</title>
+</head>
+<body>
+
+    <div class="fundo-cinza">
+        <!-- LOGO -->
+        <img src="../../../imagens/logo2.png" alt="Logo" class="logo">
+
+        <!-- ÁREA BRANCA -->
+        <div class="area-branca">
+            
+            <!-- TÍTULO CENTRALIZADO -->
+            <div class="header-titulo">
+                <h1>Editar</h1>
+                <h2>Profissional</h2>
+            </div>
+
+            <div class="linha"></div>
+
+            <!-- CONTEÚDO DA EDIÇÃO -->
+            <div class="conteudo-edicao">
+                
+                <!-- Seção do Profissional -->
+                <div class="secao-profissional">
+                    <h3>Gerenciamento de profissional</h3>
+                    
+                    <!-- Foto e Nome do Funcionário -->
+                    <div class="perfil-funcionario">
+                        <div class="foto-funcionario">
+                            <img id="fotoFuncionario" src="" alt="Foto do funcionário">
+                        </div>
+                        <h4 id="nomeFuncionario">Carregando...</h4>
+                    </div>
+
+                    <!-- Formulário de Edição -->
+                    <form id="formEdicao" class="form-edicao">
+                        <!-- Status -->
+                        <div class="campo-edicao">
+                            <label for="status">Status:</label>
+                            <select id="status" class="form-select-custom">
+                                <option value="Ativo">Ativo ou férias</option>
+                                <option value="Inativo">Inativo</option>
+                                <option value="Férias">Férias</option>
+                            </select>
+                        </div>
+
+                        <!-- Período/Horário -->
+                        <div class="campo-edicao">
+                            <label for="periodo">Período:</label>
+                            <select id="periodo" class="form-select-custom">
+                                <option value="custom">Personalizado</option>
+                                <option value="9h - 21h">9h - 21h</option>
+                                <option value="8h - 18h">8h - 18h</option>
+                                <option value="10h - 20h">10h - 20h</option>
+                                <option value="14h - 22h">14h - 22h</option>
+                            </select>
+                        </div>
+
+                        <!-- Horários Personalizados -->
+                        <div id="horariosPersonalizados" class="horarios-personalizados">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="horarioInicio">Início:</label>
+                                    <input type="time" class="form-control" id="horarioInicio">
+                                </div>
+                                <div class="col-6">
+                                    <label for="horarioFim">Fim:</label>
+                                    <input type="time" class="form-control" id="horarioFim">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Configuração da Conta -->
+                    <div class="configuracao-conta">
+                        <h3>Configuração da conta</h3>
+                        
+                        <div class="campo-edicao">
+                            <label for="email">Email:</label>
+                            <input type="email" class="form-control" id="email" readonly>
+                        </div>
+                        
+                        <div class="campo-edicao">
+                            <label for="senha">Senha:</label>
+                            <input type="password" class="form-control" id="senha" placeholder="Nova senha (deixe vazio para manter atual)">
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="botoes-acao">
+                        <button type="button" class="btn btn-salvar" id="btnSalvar">
+                            Salvar
+                        </button>
+                        <button type="button" class="btn btn-deletar" id="btnDeletar">
+                            Deletar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVBAR INFERIOR -->
+        <nav class="bottom-nav" role="navigation" aria-label="Navegação inferior">
+            <a href="../../aInicio/index.html" class="bottom-nav-item" aria-label="Início">
+                <i class="bi bi-house" aria-hidden="true"></i>
+            </a>
+            <a href="#" class="bottom-nav-item" aria-label="Adicionar Serviço">
+                <i class="bi bi-hammer" aria-hidden="true"></i>
+            </a>
+            <a href="../index.html" class="bottom-nav-item" aria-label="Adicionar Profissional">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            </a>
+            <a href="#" class="bottom-nav-item" aria-label="Serviços">
+                <i class="bi bi-book" aria-hidden="true"></i>
+            </a>
+            <a href="#" class="bottom-nav-item" aria-label="Avaliações">
+                <i class="bi bi-star" aria-hidden="true"></i>
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+</html>

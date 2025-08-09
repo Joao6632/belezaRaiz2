@@ -19,16 +19,123 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ============================
+// CARREGAMENTO DINÂMICO DE BARBEIROS
+// ============================
 
+// Função para carregar barbeiros do localStorage
+function carregarBarbeirosDinamicamente() {
+  const funcionarios = JSON.parse(localStorage.getItem('funcionarios')) || [];
+  const barbeirosAtivos = funcionarios.filter(func => func.situacao === 'Ativo');
+  
+  return barbeirosAtivos;
+}
 
+// Função para criar o HTML de um barbeiro
+function criarHTMLBarbeiro(barbeiro) {
+  // Se não tem foto, usa uma imagem padrão
+  const fotoSrc = barbeiro.foto || '../../imagens/barbeiro-default.jpg';
+  
+  return `
+    <li class="barbeiro-card" 
+        data-id="${barbeiro.id}" 
+        data-nome="${barbeiro.nome}" 
+        data-foto="${fotoSrc}" 
+        data-nota="0">
+      <img src="${fotoSrc}" alt="${barbeiro.nome}" style="border-radius: 36px;">
+      <div class="info">
+        <span>${barbeiro.nome}</span>
+        <span class="estrela">⭐ Sem avaliações</span>
+      </div>
+    </li>
+  `;
+}
 
-const barbeiros = {
-  "Silvio Santos": "../../imagens/silvio.jpg",
-  "Alex Silveira": "../../imagens/alex.jpg",
-  "Daniel Zolin": "../../imagens/daniel.jpg"
-};
+// Função para renderizar a lista de barbeiros no modal
+function renderizarBarbeiros() {
+  const barbeiros = carregarBarbeirosDinamicamente();
+  const listaBarbeiros = document.querySelector('.barbeiro-list');
+  
+  if (!listaBarbeiros) return;
+  
+  // Limpa a lista atual
+  listaBarbeiros.innerHTML = '';
+  
+  // Se não há barbeiros cadastrados
+  if (barbeiros.length === 0) {
+    listaBarbeiros.innerHTML = `
+      <li style="text-align: center; padding: 20px; color: #666;">
+        <p>Nenhum barbeiro cadastrado no momento.</p>
+        <p><small>Entre em contato com o estabelecimento.</small></p>
+      </li>
+    `;
+    return;
+  }
+  
+  // Adiciona cada barbeiro à lista
+  barbeiros.forEach(barbeiro => {
+    listaBarbeiros.innerHTML += criarHTMLBarbeiro(barbeiro);
+  });
+  
+  // Reaplica os event listeners para os novos elementos
+  aplicarEventListenersBarbeiros();
+  
+  // Atualiza as notas dos barbeiros
+  atualizarNotasBarbeiros();
+}
 
+// Função para aplicar event listeners aos barbeiros
+function aplicarEventListenersBarbeiros() {
+  const barbeiroItems = document.querySelectorAll('.barbeiro-list li.barbeiro-card');
+  const modal = document.getElementById('modalBarbeiros');
+  
+  barbeiroItems.forEach(item => {
+    // Remove listeners anteriores para evitar duplicação
+    const novoItem = item.cloneNode(true);
+    item.parentNode.replaceChild(novoItem, item);
+    
+    // Adiciona novo listener
+    novoItem.addEventListener('click', () => {
+      const nome = novoItem.dataset.nome;
+      const foto = novoItem.dataset.foto;
 
+      btnBarbeiro.innerHTML = `
+        <div class="barbeiro-info">
+          <img src="${foto}" alt="${nome}" class="barbeiro-foto">
+          <span class="barbeiro-nome">${nome}</span>
+        </div>
+        <div class="arrow">›</div>
+      `;
+      btnBarbeiro.dataset.selected = "true";
+      btnBarbeiro.dataset.nome = nome;
+      btnBarbeiro.dataset.foto = foto;
+      modal.classList.add('hidden');
+      verificarSePodeAgendar();
+      salvarEstadoAtual();
+    });
+  });
+}
+
+// Função para obter o mapeamento atualizado de barbeiros
+function obterMapeamentoBarbeiros() {
+  const funcionarios = JSON.parse(localStorage.getItem('funcionarios')) || [];
+  const mapeamento = {};
+  
+  funcionarios.forEach(func => {
+    if (func.situacao === 'Ativo' && func.foto) {
+      mapeamento[func.nome] = func.foto;
+    }
+  });
+  
+  // Adiciona barbeiros fixos como fallback (se ainda existirem)
+  const barbeirosFixos = {
+    "Silvio Santos": "../../imagens/silvio.jpg",
+    "Alex Silveira": "../../imagens/alex.jpg",
+    "Daniel Zolin": "../../imagens/daniel.jpg"
+  };
+  
+  return { ...barbeirosFixos, ...mapeamento };
+}
 
 // ============================
 //      SALVAR & CARREGAR ESTADO TEMPORÁRIO
@@ -108,35 +215,16 @@ function fecharModal(idModal) {
 }
 
 // ============================
-//      SEÇÃO: BARBEIRO
+//      SEÇÃO: BARBEIRO (ATUALIZADA)
 // ============================
 const btnBarbeiro = document.getElementById('barbeiro');
 const modal = document.getElementById('modalBarbeiros');
-const barbeiroItems = document.querySelectorAll('.barbeiro-list li');
 
+// NOVO EVENT LISTENER - Agora carrega barbeiros dinamicamente
 btnBarbeiro.addEventListener('click', () => {
+  // Recarrega os barbeiros sempre que o modal é aberto
+  renderizarBarbeiros();
   modal.classList.remove('hidden');
-});
-
-barbeiroItems.forEach(item => {
-  item.addEventListener('click', () => {
-    const nome = item.dataset.nome;
-    const foto = item.dataset.foto;
-
-    btnBarbeiro.innerHTML = `
-      <div class="barbeiro-info">
-        <img src="${foto}" alt="${nome}" class="barbeiro-foto">
-        <span class="barbeiro-nome">${nome}</span>
-      </div>
-      <div class="arrow">›</div>
-    `;
-    btnBarbeiro.dataset.selected = "true";
-    btnBarbeiro.dataset.nome = nome;
-    btnBarbeiro.dataset.foto = foto;
-    modal.classList.add('hidden');
-    verificarSePodeAgendar();
-    salvarEstadoAtual();
-  });
 });
 
 // ✅ Botão fechar modal (somente fecha, não reseta nada)
@@ -284,7 +372,6 @@ function selecionarHorario(hora) {
   salvarEstadoAtual();
 }
 
-
 // ============================
 // SALVAR AGENDAMENTO (COM USUÁRIO)
 // ============================
@@ -349,11 +436,6 @@ function salvarAgendamento() {
   localStorage.removeItem("estadoAgendamento");
 }
 
-
-
-// ✅ Carregar estado ao abrir
-document.addEventListener("DOMContentLoaded", carregarEstadoSalvo);
-
 // ===== Utils =====
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 
@@ -377,34 +459,6 @@ function abrirModal(id) {
   modal.classList.remove('hidden');
   modal.removeAttribute('aria-hidden');
 }
-
-// ===== Liga tudo quando a página carregar =====
-document.addEventListener('DOMContentLoaded', () => {
-  // Botões "X"
-  $$('.close-btn').forEach((btn) => {
-    btn.addEventListener('click', () => fecharModal(btn));
-  });
-
-  // Botões "Cancelar" dentro dos modais
-  $$('.btn-cancelar').forEach((btn) => {
-    btn.addEventListener('click', () => fecharModal(btn));
-  });
-
-  // Fechar clicando fora (overlay)
-  $$('.modal-overlay').forEach((overlay) => {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) fecharModal(overlay);
-    });
-  });
-
-  // Fechar com ESC
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      $$('.modal-overlay:not(.hidden)').forEach((m) => fecharModal(m));
-    }
-  });
-});
-
 
 // ============================
 // BOTÃO CANCELAR AGENDAMENTO (RESET TOTAL)
@@ -456,21 +510,10 @@ btnAgendar?.addEventListener("click", () => {
   alert("✅ Agendamento salvo com sucesso!");
   window.location.href = "../cAgendamentos/index.html";
 });
-function verificarSePodeAgendar() {
-  const podeAgendar =
-    btnBarbeiro.dataset.selected === "true" &&
-    btnServico.dataset.selected === "true" &&
-    btnHorario.dataset.selected === "true";
 
-  if (podeAgendar) {
-    btnAgendar.classList.remove("disabled");
-    btnAgendar.disabled = false;
-  } else {
-    btnAgendar.classList.add("disabled");
-    btnAgendar.disabled = true;
-  }
-}
-
+// ============================
+// TRATAMENTO DE REAGENDAMENTO (ATUALIZADO)
+// ============================
 const agendamentoEdicao = JSON.parse(localStorage.getItem("agendamentoEdicao"));
 if (agendamentoEdicao) {
     console.log("🔄 Modo Reagendamento detectado:", agendamentoEdicao);
@@ -478,10 +521,11 @@ if (agendamentoEdicao) {
     dataSelecionada = agendamentoEdicao.data;
     horaSelecionada = agendamentoEdicao.horario;
 
-    // Barbeiro
+    // Barbeiro - com mapeamento atualizado
+    const barbeirosAtualizados = obterMapeamentoBarbeiros();
     btnBarbeiro.dataset.selected = "true";
     btnBarbeiro.dataset.nome = agendamentoEdicao.barbeiro;
-    btnBarbeiro.dataset.foto = barbeiros[agendamentoEdicao.barbeiro] || "";
+    btnBarbeiro.dataset.foto = barbeirosAtualizados[agendamentoEdicao.barbeiro] || "../../imagens/barbeiro-default.jpg";
     btnBarbeiro.innerHTML = `
       <div class="barbeiro-info">
         <img src="${btnBarbeiro.dataset.foto}" alt="${agendamentoEdicao.barbeiro}" class="barbeiro-foto">
@@ -565,6 +609,10 @@ if (agendamentoEdicao) {
   }
 })();
 
+// ============================
+// FUNÇÕES DE AVALIAÇÃO ATUALIZADAS
+// ============================
+
 function calcularMedia(avaliacoes) {
   if (!avaliacoes || avaliacoes.length === 0) return 0;
   const soma = avaliacoes.reduce((acc, val) => acc + val, 0);
@@ -578,8 +626,11 @@ function atualizarNotasBarbeiros() {
   const barbeiros = document.querySelectorAll('.barbeiro-card');
 
   barbeiros.forEach(card => {
-    const id = card.dataset.id; // Ex: "daniel-zolin"
-    const avaliacoesDoBarbeiro = avaliacoes[id] || [];
+    const id = card.dataset.id;
+    const nome = card.dataset.nome;
+    
+    // Busca avaliações por ID ou por nome (compatibilidade)
+    const avaliacoesDoBarbeiro = avaliacoes[id] || avaliacoes[nome] || [];
     const media = calcularMedia(avaliacoesDoBarbeiro);
 
     // Tenta encontrar o span da estrela já existente
@@ -599,8 +650,38 @@ function atualizarNotasBarbeiros() {
   });
 }
 
-// ✅ Chamada garantida ao carregar a página
+// ===== INICIALIZAÇÃO COMPLETA =====
 document.addEventListener('DOMContentLoaded', () => {
+  // Carrega barbeiros dinamicamente na inicialização
+  renderizarBarbeiros();
+  
+  // Carrega estado salvo
+  carregarEstadoSalvo();
+  
+  // Atualiza notas dos barbeiros
   atualizarNotasBarbeiros();
-});
+  
+  // Botões "X"
+  $$('.close-btn').forEach((btn) => {
+    btn.addEventListener('click', () => fecharModal(btn));
+  });
 
+  // Botões "Cancelar" dentro dos modais
+  $$('.btn-cancelar').forEach((btn) => {
+    btn.addEventListener('click', () => fecharModal(btn));
+  });
+
+  // Fechar clicando fora (overlay)
+  $$('.modal-overlay').forEach((overlay) => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) fecharModal(overlay);
+    });
+  });
+
+  // Fechar com ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      $$('.modal-overlay:not(.hidden)').forEach((m) => fecharModal(m));
+    }
+  });
+});

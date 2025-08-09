@@ -109,7 +109,7 @@ function criarCardFuncionario(funcionario) {
 
 // Função para editar funcionário
 function editarFuncionario(id) {
-    window.location.href = `../bFuncionarios/editar.html?id=${id}`;
+    window.location.href = `../bFuncionarios/Edit/index.html?id=${id}`;
 }
 
 // Função para confirmar remoção do funcionário
