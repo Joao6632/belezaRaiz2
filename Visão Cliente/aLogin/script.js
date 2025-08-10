@@ -22,29 +22,74 @@ function loadUsers() {
   return JSON.parse(localStorage.getItem('users') || '[]');
 }
 
+// 🔹 Carrega funcionários do LocalStorage
+function loadFuncionarios() {
+  return JSON.parse(localStorage.getItem('funcionarios') || '[]');
+}
+
 // 🔹 Salva usuários
 function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
-// 🔹 Garante que barbeiros fixos existam
-function seedBarbeiros() {
+// 🔹 Garante que apenas o gerente fixo exista
+function seedGerente() {
   let users = loadUsers();
-  if (users.some(u => u.tipo === "barbeiro")) return;
+  
+  // Verifica se já existe o gerente
+  if (users.some(u => u.tipo === "gerente" && u.login === "joaov@barbearia.com")) return;
 
-  users.push(
-    { nome: "Silvio Santos", login: "silvio@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro1" },
-    { nome: "Alex Silveira", login: "alex@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro2" },
-    { nome: "Daniel Zolin", login: "daniel@barbearia.com", senha: "123456", tipo: "barbeiro", id: "barbeiro3" },
-    { nome: "CEO João", login: "joaov@barbearia.com", senha: "123456", tipo: "gerente", id: "gerente1" },
-  );
+  // Remove barbeiros fixos antigos se existirem
+  users = users.filter(u => u.tipo !== "barbeiro" || !u.id?.startsWith("barbeiro"));
+
+  // Adiciona apenas o gerente fixo
+  const gerenteExiste = users.find(u => u.tipo === "gerente" && u.login === "joaov@barbearia.com");
+  if (!gerenteExiste) {
+    users.push({
+      nome: "CEO João", 
+      login: "joaov@barbearia.com", 
+      senha: "123456", 
+      tipo: "gerente", 
+      id: "gerente1"
+    });
+  }
 
   saveUsers(users);
 }
 
+// 🔹 Busca usuário no sistema (users + funcionários)
+function buscarUsuario(loginNormalizado) {
+  // 1. Busca nos usuários (gerente e clientes)
+  const users = loadUsers();
+  let usuario = users.find(u => normalizeLogin(u.login) === loginNormalizado);
+  
+  if (usuario) return usuario;
+
+  // 2. Busca nos funcionários (barbeiros dinâmicos)
+  const funcionarios = loadFuncionarios();
+  const funcionario = funcionarios.find(f => 
+    f.situacao === "Ativo" && normalizeLogin(f.email) === loginNormalizado
+  );
+
+  if (funcionario) {
+    // Converte funcionário para formato de usuário
+    return {
+      id: funcionario.id,
+      nome: funcionario.nome,
+      login: funcionario.email,
+      senha: funcionario.senha,
+      tipo: "barbeiro", // Funcionários ativos são barbeiros
+      dataCadastro: funcionario.dataCadastro,
+      situacao: funcionario.situacao
+    };
+  }
+
+  return null;
+}
+
 // ==== Lógica do Login ====
 document.addEventListener('DOMContentLoaded', () => {
-  seedBarbeiros(); // garante barbeiros no LocalStorage
+  seedGerente(); // garante apenas o gerente no LocalStorage
 
   const loginInput = document.getElementById('loginInput');
   const passwordInput = document.getElementById('senhaInput');
@@ -101,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const users = loadUsers();
-    const user = users.find(u => normalizeLogin(u.login) === loginKey);
+    // 🔥 Busca usuário no sistema integrado
+    const user = buscarUsuario(loginKey);
 
     if (!user) {
       alert('Conta não encontrada.');
@@ -122,9 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user.tipo === "barbeiro") {
       window.location.href = "../../Visão Barbeiro/Agendamentos/Agen.html";
     } else if (user.tipo === "gerente") {
-      window.location.href = "../../Visão Dono/aInicio/index.html"; // ajuste a rota que quiser
+      window.location.href = "../../Visão Dono/aInicio/index.html";
     } else {
       window.location.href = "../bInicio/inicio.html"; // cliente ou outro tipo
     }
   });
+
+  // 🔹 Debug: mostra usuários disponíveis no console (remover em produção)
+  console.log("Usuários:", loadUsers());
+  console.log("Funcionários:", loadFuncionarios());
 });
