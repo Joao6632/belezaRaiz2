@@ -1,0 +1,418 @@
+/* 🔧 Reset global sem ferrar o scroll */
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  /* 🔧 Travar scroll do documento; só a área branca rola */
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;           /* ✅ garante altura base para o flex */
+    max-height: 100dvh;     /* ✅ mais estável em mobile */
+    overflow: hidden;       /* ✅ trava o body/html */
+    font-family: Arial, sans-serif;
+    background-color: #d9d9d9;
+  }
+  
+  /* 🔹 Fundo cinza como wrapper flex (necessário p/ o overflow interno funcionar) */
+  .fundo-cinza {
+    background-color: #d9d9d9;
+    height: 100%;           /* ✅ altura fixa */
+    width: 100%;
+    position: relative;
+    display: flex;          /* ✅ flex permite que a área branca ocupe o restante */
+    flex-direction: column;
+    padding-top: 0;
+    margin-top: 0;
+    overflow: hidden;       /* 🔹 garante que só a área branca role */
+  }
+  
+  /* 🔹 Logo centralizada */
+  .logo {
+    width: 120px;
+    display: block;
+    margin: 0 auto;
+    padding: 0;
+  }     
+  
+  /* 🔹 Área branca — ÚNICA com rolagem */
+  .area-branca {
+    background-color: white;
+    border-top-left-radius: 80px;
+    padding: 30px 18px calc(60px + env(safe-area-inset-bottom) + 24px);
+    width: 100%;
+    flex: 1 1 auto;         /* ✅ ocupa o espaço restante */
+    min-height: 0;          /* ✅ crucial p/ overflow no flex container */
+    position: relative;
+    overflow-y: auto;       /* ✅ só aqui rola */
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  
+  /* Scroll bonito no Chrome */
+  .area-branca::-webkit-scrollbar {
+    width: 6px;
+  }
+  .area-branca::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+  .area-branca::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  /* 🔹 Linha de divisão */
+  .linha {
+    width: 100%;
+    height: 2px;
+    background: rgb(163, 163, 163);
+    margin-top: 20px;
+    margin-bottom: 12px;
+  }
+  
+  /* 🔹 Título */
+  h1 {
+    font-size: 40px;
+    margin: 0 10px 10px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  /* Bottom Navigation Bar */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 998;
+  }
+  
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    flex-grow: 1;
+    color: var(--color-text, #333) !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .bottom-nav-item i { font-size: 1.5rem; }
+  .bottom-nav-item span { font-size: 0.75rem; }
+  
+  .bottom-nav-item:hover,
+  .bottom-nav-item:focus,
+  .bottom-nav-item:active {
+    color: var(--color-text, #333) !important;
+  }
+  
+  .bottom-nav-item.active,
+  .bottom-nav-item.active:hover,
+  .bottom-nav-item.active:focus,
+  .bottom-nav-item.active:active {
+    color: var(--color-primary, #007bff) !important;
+  }
+  
+  /* 🔹 Título centralizado */
+  .header-titulo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;     
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+  .header-titulo h1 {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+  }
+  .header-titulo h2 {
+    font-size: 14px;
+    font-weight: normal;
+    margin: 0;
+  }
+  
+  /* 🔹 Card de Agendamento */
+  .card-agendamento {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f2f2f2;
+    border-radius: 12px;
+    padding: 12px;
+    color: #333;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  }
+  
+  /* 🔹 Imagem do Card */
+  .card-agendamento img {
+    width: 70px;
+    height: 70px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+  
+  /* 🔹 Informações */
+  .card-info { flex: 1; }
+  .card-info h3 {
+    font-size: 15px;
+    margin: 0 0 4px;
+    font-weight: bold;
+    color: #222;
+  }
+  .card-info p {
+    margin: 2px 0;
+    font-size: 13px;
+    color: #555;
+  }
+  
+  /* 🔹 Botões */
+  .card-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card-buttons button {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+  .card-buttons .cancelar { background: #ff4d4d; color: white; }
+  .card-buttons .cancelar:hover { background: #e03b3b; }
+  .card-buttons .reagendar { background: #007bff; color: white; }
+  .card-buttons .reagendar:hover { background: #005dc3; }
+  
+  /* 🔹 Container geral do formulário */
+.form-profissional {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 🔹 Títulos */
+.form-profissional h2 {
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.form-profissional h3 {
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+/* 🔹 Upload de foto */
+.upload-foto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.upload-foto label {
+    font-size: 14px;
+}
+
+.upload-box {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #000;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.upload-box:hover {
+    background-color: #f5f5f5;
+}
+
+.upload-box i {
+    font-size: 20px;
+}
+
+/* 🔹 Inputs arredondados */
+.form-profissional input {
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+/* 🔹 Botão centralizado */
+.form-profissional button {
+    display: block;
+    margin: 0 auto;
+    padding: 6px 20px;
+    border-radius: 20px;
+}
+
+        /* Adaptação do CSS existente para os cards de serviços */
+        
+        .servicos-container {
+            margin-bottom: 20px;
+        }
+
+        .servico-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f2f2f2;
+            border-radius: 12px;
+            padding: 12px;
+            color: #333;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .servico-card img {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+
+        .servico-info {
+            flex: 1;
+        }
+
+        .servico-info h5 {
+            font-size: 15px;
+            margin: 0 0 4px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .servico-info p {
+            margin: 2px 0;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .servico-preco {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1em;
+            margin-right: 10px;
+        }
+
+        .servico-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .servico-actions .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.85em;
+            border-radius: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .servico-tipo {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .servico-tipo.oferta {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .botao-adicionar-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Mantém o estilo do upload-box do CSS original */
+        .upload-box {
+            width: 80px !important;
+            height: 80px !important;
+            border: 2px solid #000;
+            border-radius: 15px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .upload-box:hover {
+            background-color: #f5f5f5;
+        }
+
+        .upload-box i {
+            font-size: 20px;
+        }
+
+        .upload-box.has-image {
+            border-color: #28a745;
+            background: #f0fff0;
+        }
+
+        .upload-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 13px;
+        }
+
+        /* Ajustes para o modal ficar mais bonito */
+        .modal-content {
+            border-radius: 20px;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 20px 20px 0 0;
+        }
+
+        /* Override para textarea */
+        textarea.form-control {
+            border-radius: 20px !important;
+        }
+
+        /* Override para select */
+        select.form-control,
+        .form-select {
+            border-radius: 20px !important;
+        }

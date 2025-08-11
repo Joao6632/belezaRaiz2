@@ -56,6 +56,7 @@ h1 {
   color: #222;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
 }
+
 .options {
   display: flex;
   flex-direction: column;
@@ -319,41 +320,60 @@ h1 {
 #acancelarServico { background: #ccc; }
 #confirmarServico { background: #4caf50; color: white; }
 
+/* Estilos corrigidos para servico-info */
 .servico-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-grow: 1;
 }
 
 .servico-foto {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   object-fit: cover;
+  flex-shrink: 0;
+}
+
+.servico-detalhes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .servico-nome {
   font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
 }
 
-/* Foto e texto padronizados para barbeiro e serviço */
-.barbeiro-info, .servico-info {
+.servico-preco {
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
+}
+
+/* Foto e texto padronizados para barbeiro */
+.barbeiro-info {
   display: flex;
   align-items: center;
-  gap: 12px; /* mesmo espaçamento */
+  gap: 12px;
+  flex-grow: 1;
 }
 
-.barbeiro-foto, .servico-foto {
-  width: 44px;   /* mesmo tamanho do Silvio Santos */
+.barbeiro-foto {
+  width: 44px;
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.barbeiro-nome, .servico-nome {
-  font-weight: bold;  /* agora ambos ficam negritos */
-  font-size: 15px;    /* tamanho igual */
-  color: #333;        /* cor um pouco mais escura */
+.barbeiro-nome {
+  font-weight: bold;
+  font-size: 15px;
+  color: #333;
 }
 
 /* Reutiliza seu modal-overlay e modal-content existentes */
@@ -437,7 +457,6 @@ h1 {
     margin: 0 auto; /* garante centralização */
   }
 
-
   .btn-agendar {
     height: 45px;
     font-size: 15px;
@@ -468,4 +487,187 @@ h1 {
   font-size: 20px;
   color: black;
 }
+/* CSS para os cards de serviço dentro do modal */
+.servico-list .servico-card {
+  background: #f2f2f2;
+  margin: 10px 0;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
+.servico-list .servico-card:hover {
+  background: #ddd;
+}
+
+.servico-list .servico-card img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.servico-list .servico-card .servico-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.servico-list .servico-card .servico-info h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.servico-list .servico-card .servico-resumo {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.servico-list .servico-card .servico-preco {
+  font-size: 14px;
+  font-weight: 600;
+  color: #007bff;
+  margin: 0;
+}
+
+.servico-list .servico-card .servico-duracao {
+  font-size: 12px;
+  color: #888;
+  background: #e9ecef;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* Para o modal de detalhes */
+.modal-content .detalhe {
+  text-align: center;
+}
+
+.modal-content .detalhe img {
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+
+.modal-content .acoes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-content .acoes button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#cancelarServico {
+  background: #e9ecef;
+  color: #495057;
+}
+
+#confirmarServico {
+  background: #28a745;
+  color: white;
+}
+.servico-info-simples {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+  padding: 8px 0;
+}
+
+.servico-nome-simples {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.servico-preco-simples {
+  font-size: 14px;
+  color: #007bff;
+  font-weight: bold;
+}
+
+
+.servico-info-simples {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+  padding: 8px 0;
+}
+
+.servico-nome-simples {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.servico-preco-simples {
+  font-size: 14px;
+  color: #007bff;
+  font-weight: bold;
+}
+
+/* Estilo para o card de serviço - simples como os barbeiros */
+.servico-list .servico-card {
+  background: #f7f7f7;
+  border-radius: 40px;
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin: 8px 0;
+}
+
+.servico-list .servico-card:hover {
+  background: #eaeaea;
+}
+
+.servico-list .servico-card .arrow {
+  font-size: 20px;
+  color: #999;
+  margin-left: auto;
+}
+
+/* CSS para o serviço selecionado no botão principal - IGUAL AO BARBEIRO */
+.servico-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-grow: 1;
+}
+
+.servico-foto {
+  width: 44px;  /* Igual ao barbeiro */
+  height: 44px; /* Igual ao barbeiro */
+  border-radius: 50%; /* Redondo igual ao barbeiro */
+  object-fit: cover;
+}
+
+.servico-nome {
+  font-weight: bold; /* Negrito igual ao barbeiro */
+  font-size: 15px;   /* Igual ao barbeiro */
+  color: #333;
+}

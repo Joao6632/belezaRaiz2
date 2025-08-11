@@ -19,6 +19,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// função de redenrizar
+
+function renderizarBotaoServico(nome, img, preco, emoji) {
+  const temEmoji = emoji && emoji.trim() !== '';
+  
+  if (temEmoji) {
+    // Estrutura com emoji - igual ao print
+    return `
+      <div class="icon service-icon" style="background: white; border: 2.5px solid #000; font-size: 18px; display: flex; align-items: center; justify-content: center;">
+        ${emoji}
+      </div>
+      <span style="flex-grow: 1; font-size: 16px; color: #333;">${nome}</span>
+      <span style="font-weight: bold; color: #007bff; margin-left: auto;">R$ ${preco}</span>
+      <div class="arrow">›</div>
+    `;
+  } else {
+    // Estrutura sem emoji - com imagem
+    return `
+      <div class="servico-info">
+        <img src="${img}" alt="${nome}" class="servico-foto" 
+             onerror="this.src='../../imagens/servico-default.jpg'" 
+             style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
+        <div class="servico-detalhes">
+          <span class="servico-nome" style="font-size: 16px; font-weight: 500;">${nome}</span>
+          <span class="servico-preco" style="font-size: 14px; color: #007bff; font-weight: bold;">R$ ${preco}</span>
+        </div>
+      </div>
+      <div class="arrow">›</div>
+    `;
+  }
+}
 // ============================
 // CARREGAMENTO DINÂMICO DE BARBEIROS
 // ============================
@@ -138,6 +169,120 @@ function obterMapeamentoBarbeiros() {
 }
 
 // ============================
+// CARREGAMENTO DINÂMICO DE SERVIÇOS
+// ============================
+
+// Função para carregar serviços do localStorage
+function carregarServicosDinamicamente() {
+  const servicos = JSON.parse(localStorage.getItem('servicos')) || [];
+  // Só retorna serviços do tipo 'servico' e que estejam ativos
+  return servicos.filter(servico => servico.tipo === 'servico');
+}
+
+// Função para criar o HTML de um serviço
+function criarHTMLServico(servico) {
+  const emoji = servico.emoji ? servico.emoji + ' ' : '';
+  const preco = parseFloat(servico.preco || 0).toFixed(2).replace('.', ',');
+  const fotoSrc = servico.foto || '../../imagens/servico-default.jpg';
+  
+  return `
+    <li class="servico-card" 
+        data-id="${servico.id}"
+        data-nome="${servico.nome}" 
+        data-img="${fotoSrc}"
+        data-descricao="${servico.descricao || 'Descrição não disponível'}"
+        data-preco="${preco}"
+        data-duracao="${servico.duracao}"
+        data-emoji="${servico.emoji || ''}">
+      
+      <img src="${fotoSrc}" alt="${servico.nome}" class="servico-foto-pequena" 
+           onerror="this.src='../../imagens/servico-default.jpg'">
+      
+      <div class="servico-info-simples">
+        <span class="servico-nome-simples">${emoji}${servico.nome}</span>
+        <span class="servico-preco-simples">R$ ${preco}</span>
+      </div>
+      <div class="arrow">›</div>
+    </li>
+  `;
+}
+
+
+// Função para renderizar a lista de serviços no modal
+function renderizarServicos() {
+  const servicos = carregarServicosDinamicamente();
+  const listaServicos = document.getElementById('servicoList');
+  
+  if (!listaServicos) {
+    console.warn('Element #servicoList não encontrado');
+    return;
+  }
+  
+  // Limpa a lista atual
+  listaServicos.innerHTML = '';
+  
+  // Se não há serviços cadastrados
+  if (servicos.length === 0) {
+    listaServicos.innerHTML = `
+      <li style="text-align: center; padding: 20px; color: #666;">
+        <div class="no-services">
+          <i class="bi bi-scissors" style="font-size: 2rem; margin-bottom: 10px;"></i>
+          <p><strong>Nenhum serviço disponível</strong></p>
+          <p><small>Os serviços aparecerão aqui quando forem cadastrados pelo estabelecimento.</small></p>
+        </div>
+      </li>
+    `;
+    return;
+  }
+  
+  // Adiciona cada serviço à lista
+  servicos.forEach(servico => {
+    listaServicos.innerHTML += criarHTMLServico(servico);
+  });
+  
+  // Reaplica os event listeners para os novos elementos
+  aplicarEventListenersServicos();
+}
+
+// Função para aplicar event listeners aos serviços
+function aplicarEventListenersServicos() {
+  const servicoItems = document.querySelectorAll('.servico-list .servico-card');
+  const modalServicos = document.getElementById('modalServicos');
+  const modalServicoDetalhe = document.getElementById('modalServicoDetalhe');
+  
+  servicoItems.forEach(item => {
+    // Remove listeners anteriores para evitar duplicação
+    const novoItem = item.cloneNode(true);
+    item.parentNode.replaceChild(novoItem, item);
+    
+    // Adiciona novo listener
+    novoItem.addEventListener('click', () => {
+      // Preenche o modal de detalhes com os dados do serviço
+      const nome = novoItem.dataset.nome;
+      const img = novoItem.dataset.img;
+      const descricao = novoItem.dataset.descricao;
+      const preco = novoItem.dataset.preco;
+      const duracao = novoItem.dataset.duracao;
+      
+      // Atualiza elementos do modal de detalhe
+      document.getElementById('detalheTitulo').textContent = nome;
+      document.getElementById('detalheImg').src = img;
+      document.getElementById('detalheImg').alt = nome;
+      document.getElementById('detalheDescricao').textContent = descricao;
+      document.getElementById('detalhePreco').textContent = preco;
+      document.getElementById('detalheDuracao').textContent = duracao;
+      
+      // Salva referência do serviço selecionado
+      servicoSelecionado = novoItem;
+      
+      // Fecha modal de lista e abre modal de detalhes
+      modalServicos.classList.add('hidden');
+      modalServicoDetalhe.classList.remove('hidden');
+    });
+  });
+}
+
+// ============================
 //      SALVAR & CARREGAR ESTADO TEMPORÁRIO
 // ============================
 
@@ -152,6 +297,8 @@ function salvarEstadoAtual() {
       nome: btnServico.dataset.nome || null,
       img: btnServico.dataset.img || null,
       duracao: btnServico.dataset.duracao || null,
+      preco: btnServico.dataset.preco || null,
+      emoji: btnServico.dataset.emoji || null, // ADICIONAR ESTA LINHA
       selected: btnServico.dataset.selected === "true"
     },
     horario: {
@@ -182,18 +329,21 @@ function carregarEstadoSalvo() {
   }
 
   // ✅ Restaurar serviço
-  if (estadoSalvo.servico.selected) {
+if (estadoSalvo.servico.selected) {
     btnServico.dataset.selected = "true";
     btnServico.dataset.nome = estadoSalvo.servico.nome;
     btnServico.dataset.img = estadoSalvo.servico.img;
     btnServico.dataset.duracao = estadoSalvo.servico.duracao;
-    btnServico.innerHTML = `
-      <div class="servico-info">
-        <img src="${estadoSalvo.servico.img}" alt="${estadoSalvo.servico.nome}" class="servico-foto">
-        <span class="servico-nome">${estadoSalvo.servico.nome}</span>
-      </div>
-      <div class="arrow">›</div>
-    `;
+    btnServico.dataset.preco = estadoSalvo.servico.preco;
+    btnServico.dataset.emoji = estadoSalvo.servico.emoji;
+    
+    // USA A NOVA FUNÇÃO DE RENDERIZAÇÃO
+    btnServico.innerHTML = renderizarBotaoServico(
+      estadoSalvo.servico.nome,
+      estadoSalvo.servico.img,
+      estadoSalvo.servico.preco,
+      estadoSalvo.servico.emoji
+    );
   }
 
   // ✅ Restaurar horário
@@ -235,11 +385,10 @@ document.querySelectorAll('.fechar').forEach(btn => {
 });
 
 // ============================
-//      SEÇÃO: SERVIÇOS
+// ATUALIZAÇÃO DA SEÇÃO DE SERVIÇOS
 // ============================
 const btnServico = document.getElementById('servico');
 const modalServicos = document.getElementById('modalServicos');
-const servicoItems = document.querySelectorAll('.servico-card');
 const modalServicoDetalhe = document.getElementById('modalServicoDetalhe');
 
 const detalheTitulo = document.getElementById('detalheTitulo');
@@ -253,48 +402,53 @@ const confirmarServico = document.getElementById('confirmarServico');
 
 let servicoSelecionado = null;
 
+// Event listener para abrir o modal de serviços
 btnServico.addEventListener('click', () => {
+  // Recarrega os serviços sempre que o modal é aberto
+  renderizarServicos();
   modalServicos.classList.remove('hidden');
 });
 
-servicoItems.forEach(item => {
-  item.addEventListener('click', () => {
-    servicoSelecionado = item;
-    detalheTitulo.textContent = item.dataset.nome;
-    detalheImg.src = `../../imagens/${item.dataset.img}`;
-    detalheDescricao.textContent = item.dataset.descricao;
-    detalhePreco.textContent = item.dataset.preco;
-    detalheDuracao.textContent = item.dataset.duracao;
-    modalServicos.classList.add('hidden');
-    modalServicoDetalhe.classList.remove('hidden');
-  });
-});
-
+// Event listener para cancelar seleção
 cancelarServico.addEventListener('click', () => {
   modalServicoDetalhe.classList.add('hidden');
   modalServicos.classList.remove('hidden');
 });
 
+
+// Event listener para confirmar seleção
 confirmarServico.addEventListener('click', () => {
   if (servicoSelecionado) {
     const nome = servicoSelecionado.dataset.nome;
     const img = servicoSelecionado.dataset.img;
+    const preco = servicoSelecionado.dataset.preco;
+    const duracao = servicoSelecionado.dataset.duracao;
+    const emoji = servicoSelecionado.dataset.emoji;
 
+    // ✅ ATUALIZA IGUAL AO BARBEIRO - SÓ FOTO + NOME
     btnServico.innerHTML = `
       <div class="servico-info">
-        <img src="../../imagens/${img}" alt="${nome}" class="servico-foto">
-        <span class="servico-nome">${nome}</span>
+        <img src="${img}" alt="${nome}" class="servico-foto" onerror="this.src='../../imagens/servico-default.jpg'">
+        <span class="servico-nome">${emoji ? emoji + ' ' : ''}${nome}</span>
       </div>
       <div class="arrow">›</div>
     `;
+    
+    // Marca como selecionado e salva os dados
     btnServico.dataset.selected = "true";
     btnServico.dataset.nome = nome;
-    btnServico.dataset.img = `../../imagens/${img}`;
-    btnServico.dataset.duracao = servicoSelecionado.dataset.duracao;
+    btnServico.dataset.img = img;
+    btnServico.dataset.duracao = duracao;
+    btnServico.dataset.preco = preco;
+    btnServico.dataset.emoji = emoji;
+    
+    // Fecha o modal
+    modalServicoDetalhe.classList.add('hidden');
+    
+    // Verifica se pode agendar e salva o estado
+    verificarSePodeAgendar();
+    salvarEstadoAtual();
   }
-  modalServicoDetalhe.classList.add('hidden');
-  verificarSePodeAgendar();
-  salvarEstadoAtual();
 });
 
 // ============================
@@ -437,7 +591,7 @@ function salvarAgendamento() {
 }
 
 // ===== Utils =====
-const $$ = (s) => Array.from(document.querySelectorAll(s));
+const $ = (s) => Array.from(document.querySelectorAll(s));
 
 function fecharModal(target) {
   let modal = null;
@@ -521,7 +675,7 @@ if (agendamentoEdicao) {
     dataSelecionada = agendamentoEdicao.data;
     horaSelecionada = agendamentoEdicao.horario;
 
-    // Barbeiro - com mapeamento atualizado
+    // Barbeiro
     const barbeirosAtualizados = obterMapeamentoBarbeiros();
     btnBarbeiro.dataset.selected = "true";
     btnBarbeiro.dataset.nome = agendamentoEdicao.barbeiro;
@@ -534,19 +688,25 @@ if (agendamentoEdicao) {
       <div class="arrow">›</div>
     `;
 
-    // Serviço
+    // Serviço - USAR NOVA FUNÇÃO
     const nomeServico = agendamentoEdicao.titulo.split(" - ")[0];
+    const servicosCarregados = carregarServicosDinamicamente();
+    const servicoOriginal = servicosCarregados.find(s => s.nome === nomeServico);
+    
     btnServico.dataset.selected = "true";
     btnServico.dataset.nome = nomeServico;
     btnServico.dataset.img = agendamentoEdicao.imagem;
     btnServico.dataset.duracao = agendamentoEdicao.duracao;
-    btnServico.innerHTML = `
-      <div class="servico-info">
-        <img src="${agendamentoEdicao.imagem}" alt="${nomeServico}" class="servico-foto">
-        <span class="servico-nome">${nomeServico}</span>
-      </div>
-      <div class="arrow">›</div>
-    `;
+    btnServico.dataset.preco = servicoOriginal?.preco?.toFixed(2).replace('.', ',') || '0,00';
+    btnServico.dataset.emoji = servicoOriginal?.emoji || '';
+    
+    // USA A NOVA FUNÇÃO DE RENDERIZAÇÃO
+    btnServico.innerHTML = renderizarBotaoServico(
+      nomeServico,
+      agendamentoEdicao.imagem,
+      btnServico.dataset.preco,
+      servicoOriginal?.emoji || ''
+    );
 
     // Horário
     btnHorario.dataset.selected = "true";
@@ -650,10 +810,27 @@ function atualizarNotasBarbeiros() {
   });
 }
 
+// ============================
+// FUNÇÕES AUXILIARES PARA COMPATIBILIDADE
+// ============================
+
+// Função para obter serviço por nome (compatibilidade com código existente)
+function obterServicoPorNome(nome) {
+  const servicos = carregarServicosDinamicamente();
+  return servicos.find(s => s.nome.toLowerCase() === nome.toLowerCase());
+}
+
+// Função para obter serviço por ID
+function obterServicoPorId(id) {
+  const servicos = carregarServicosDinamicamente();
+  return servicos.find(s => s.id === id);
+}
+
 // ===== INICIALIZAÇÃO COMPLETA =====
 document.addEventListener('DOMContentLoaded', () => {
-  // Carrega barbeiros dinamicamente na inicialização
+  // Carrega barbeiros e serviços dinamicamente na inicialização
   renderizarBarbeiros();
+  renderizarServicos();
   
   // Carrega estado salvo
   carregarEstadoSalvo();
@@ -662,17 +839,17 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarNotasBarbeiros();
   
   // Botões "X"
-  $$('.close-btn').forEach((btn) => {
+  $('.close-btn').forEach((btn) => {
     btn.addEventListener('click', () => fecharModal(btn));
   });
 
   // Botões "Cancelar" dentro dos modais
-  $$('.btn-cancelar').forEach((btn) => {
+  $('.btn-cancelar').forEach((btn) => {
     btn.addEventListener('click', () => fecharModal(btn));
   });
 
   // Fechar clicando fora (overlay)
-  $$('.modal-overlay').forEach((overlay) => {
+  $('.modal-overlay').forEach((overlay) => {
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) fecharModal(overlay);
     });
@@ -681,7 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Fechar com ESC
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      $$('.modal-overlay:not(.hidden)').forEach((m) => fecharModal(m));
+      $('.modal-overlay:not(.hidden)').forEach((m) => fecharModal(m));
     }
   });
 });
