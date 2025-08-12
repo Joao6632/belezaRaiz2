@@ -452,8 +452,9 @@ confirmarServico.addEventListener('click', () => {
 });
 
 // ============================
-//      SEÇÃO: HORÁRIOS
+//      SEÇÃO: HORÁRIOS DINÂMICOS COM PAGINAÇÃO
 // ============================
+
 const btnHorario = document.getElementById("horario");
 const modalCalendario = document.getElementById("modalCalendario");
 const modalHorarios = document.getElementById("modalHorarios");
@@ -464,22 +465,188 @@ let dataSelecionada = null;
 let horaSelecionada = null;
 let horariosIndisponiveis = JSON.parse(localStorage.getItem("horariosIndisponiveis")) || [];
 
-const horariosDisponiveis = ["11h30","12h00","12h30","13h00","13h30","14h00","14h30","15h00","15h30","16h00","16h30"];
+// Controle de paginação
+let paginaAtual = 0;
+const horariosPorPagina = 8; // 4 linhas x 2 colunas
+let todosHorarios = [];
+
+// Função para calcular pausa automaticamente baseada na carga horária
+function calcularPausaAutomatica(horarioInicio, horarioFim) {
+  const [horaInicio, minInicio] = horarioInicio.split(':').map(Number);
+  const [horaFim, minFim] = horarioFim.split(':').map(Number);
+  
+  const inicioMinutos = horaInicio * 60 + minInicio;
+  const fimMinutos = horaFim * 60 + minFim;
+  const cargaHoraria = (fimMinutos - inicioMinutos) / 60; // em horas
+  
+  // Regras para pausas baseadas na carga horária
+  if (cargaHoraria <= 4) {
+    // Até 4h: sem pausa obrigatória
+    return { pausaInicio: null, pausaFim: null };
+  } else if (cargaHoraria <= 6) {
+    // 4h-6h: pausa de 15min no meio do turno
+    const meioTurno = inicioMinutos + (fimMinutos - inicioMinutos) / 2;
+    const pausaInicio = Math.floor(meioTurno / 60);
+    const pausaInicioMin = meioTurno % 60;
+    
+    return {
+      pausaInicio: `${pausaInicio.toString().padStart(2, '0')}:${Math.floor(pausaInicioMin).toString().padStart(2, '0')}`,
+      pausaFim: `${pausaInicio.toString().padStart(2, '0')}:${(Math.floor(pausaInicioMin) + 15).toString().padStart(2, '0')}`
+    };
+  } else if (cargaHoraria <= 8) {
+    // 6h-8h: pausa de 1h no meio do turno
+    const meioTurno = inicioMinutos + (fimMinutos - inicioMinutos) / 2;
+    const pausaInicio = Math.floor(meioTurno / 60);
+    const pausaInicioMin = meioTurno % 60;
+    
+    return {
+      pausaInicio: `${pausaInicio.toString().padStart(2, '0')}:${Math.floor(pausaInicioMin).toString().padStart(2, '0')}`,
+      pausaFim: `${(pausaInicio + 1).toString().padStart(2, '0')}:${Math.floor(pausaInicioMin).toString().padStart(2, '0')}`
+    };
+  } else {
+    // Mais de 8h: pausa de 1h30min no meio do turno
+    const meioTurno = inicioMinutos + (fimMinutos - inicioMinutos) / 2;
+    const pausaInicio = Math.floor(meioTurno / 60);
+    const pausaInicioMin = meioTurno % 60;
+    
+    return {
+      pausaInicio: `${pausaInicio.toString().padStart(2, '0')}:${Math.floor(pausaInicioMin).toString().padStart(2, '0')}`,
+      pausaFim: `${Math.floor((meioTurno + 90) / 60).toString().padStart(2, '0')}:${Math.floor((meioTurno + 90) % 60).toString().padStart(2, '0')}`
+    };
+  }
+}
+
+// Função para buscar configuração do funcionário selecionado
+function obterConfiguracaoFuncionario() {
+  const funcionarioId = btnBarbeiro.dataset.id;
+  
+  if (!funcionarioId) {
+    // Configuração padrão se não tiver funcionário selecionado
+    return {
+      inicio: "08:00",
+      fim: "18:00",
+      pausaInicio: "12:00",
+      pausaFim: "13:00"
+    };
+  }
+
+  // Buscar funcionários do localStorage
+  const funcionarios = JSON.parse(localStorage.getItem('funcionarios')) || [];
+  const funcionario = funcionarios.find(f => f.id === funcionarioId);
+  
+  if (funcionario && funcionario.horarioInicio && funcionario.horarioFim) {
+    // Calcular pausa automaticamente baseada na carga horária
+    const pausaCalculada = calcularPausaAutomatica(funcionario.horarioInicio, funcionario.horarioFim);
+    
+    return {
+      inicio: funcionario.horarioInicio,
+      fim: funcionario.horarioFim,
+      pausaInicio: pausaCalculada.pausaInicio || funcionario.horarioInicio, // Se não tem pausa, usa horário início
+      pausaFim: pausaCalculada.pausaFim || funcionario.horarioInicio
+    };
+  }
+  
+  // Fallback para configuração padrão
+  return {
+    inicio: "08:00",
+    fim: "18:00",
+    pausaInicio: "12:00",
+    pausaFim: "13:00"
+  };
+}
 
 const inputData = document.getElementById("dataEscolhida");
 const hoje = new Date().toISOString().split("T")[0];
 inputData.min = hoje;
 
+// Event listener para abrir modal de data
 btnHorario.addEventListener("click", () => {
+  // Verificar se serviço foi selecionado
+  if (!btnServico.dataset.selected || btnServico.dataset.selected !== "true") {
+    alert("⚠️ Selecione um serviço primeiro!");
+    return;
+  }
+  
+  // Verificar se funcionário foi selecionado
+  if (!btnBarbeiro.dataset.selected || btnBarbeiro.dataset.selected !== "true") {
+    alert("⚠️ Selecione um funcionário primeiro!");
+    return;
+  }
+  
   modalCalendario.classList.remove("hidden");
 });
 
+// Função para gerar horários baseados na duração do serviço
+function gerarHorariosDisponiveis(duracaoServicoMinutos) {
+  const horarios = [];
+  
+  // Obter configuração específica do funcionário selecionado
+  const configuracaoFuncionario = obterConfiguracaoFuncionario();
+  
+  const [horaInicio, minInicio] = configuracaoFuncionario.inicio.split(":").map(Number);
+  const [horaFim, minFim] = configuracaoFuncionario.fim.split(":").map(Number);
+  
+  let horaAtual = horaInicio * 60 + minInicio; // Converter para minutos totais
+  const fimMinutos = horaFim * 60 + minFim;
+  
+  // Verificar se tem pausa
+  let pausaInicioMinutos = null;
+  let pausaFimMinutos = null;
+  
+  if (configuracaoFuncionario.pausaInicio && configuracaoFuncionario.pausaFim) {
+    const [horaPausaInicio, minPausaInicio] = configuracaoFuncionario.pausaInicio.split(":").map(Number);
+    const [horaPausaFim, minPausaFim] = configuracaoFuncionario.pausaFim.split(":").map(Number);
+    pausaInicioMinutos = horaPausaInicio * 60 + minPausaInicio;
+    pausaFimMinutos = horaPausaFim * 60 + minPausaFim;
+  }
+  
+  while (horaAtual + duracaoServicoMinutos <= fimMinutos) {
+    let podeAdicionar = true;
+    
+    // Se tem pausa, verificar conflitos
+    if (pausaInicioMinutos !== null && pausaFimMinutos !== null) {
+      const fimServico = horaAtual + duracaoServicoMinutos;
+      
+      // Só adiciona o horário se não conflita com a pausa
+      if (!(fimServico <= pausaInicioMinutos || horaAtual >= pausaFimMinutos)) {
+        podeAdicionar = false;
+      }
+    }
+    
+    if (podeAdicionar) {
+      const horas = Math.floor(horaAtual / 60);
+      const minutos = horaAtual % 60;
+      const horarioFormatado = `${horas.toString().padStart(2, '0')}h${minutos.toString().padStart(2, '0')}`;
+      horarios.push(horarioFormatado);
+    }
+    
+    // Se chegou na pausa e ainda não passou dela, pula para depois da pausa
+    if (pausaInicioMinutos !== null && horaAtual < pausaInicioMinutos && horaAtual + duracaoServicoMinutos > pausaInicioMinutos) {
+      horaAtual = pausaFimMinutos;
+    } else {
+      horaAtual += duracaoServicoMinutos;
+    }
+  }
+  
+  return horarios;
+}
+
+// Função para abrir modal de horários após selecionar data
 function abrirHorarios() {
   const dataInput = inputData.value;
-  if (!dataInput) return alert("Selecione uma data válida!");
+  if (!dataInput) {
+    alert("⚠️ Selecione uma data válida!");
+    return;
+  }
 
-  const dataSelecionadaObj = new Date(dataInput);
-  if (dataSelecionadaObj < new Date(hoje)) return alert("⚠️ Não é possível agendar para datas passadas!");
+  const dataSelecionadaObj = new Date(dataInput + "T00:00:00");
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  
+  if (dataSelecionadaObj < hoje) {
+    alert("⚠️ Não é possível agendar para datas passadas!");
+    return;
+  }
 
   const [ano, mes, dia] = dataInput.split("-");
   dataSelecionada = `${dia}/${mes}`;
@@ -488,44 +655,290 @@ function abrirHorarios() {
   modalHorarios.classList.remove("hidden");
 }
 
+// Função principal para carregar horários disponíveis
 function carregarHorarios(dataInput) {
-  listaHorarios.innerHTML = "";
+  // Verificar se serviço foi selecionado
+  const servicoSelecionado = btnServico.dataset.duracao;
+  if (!servicoSelecionado) {
+    alert("⚠️ Erro: Duração do serviço não encontrada!");
+    modalHorarios.classList.add("hidden");
+    return;
+  }
+  
+  // Extrair duração em minutos
+  const duracaoMinutos = parseInt(servicoSelecionado.replace('min', ''));
+  
+  // Gerar todos os horários baseados na duração do serviço
+  todosHorarios = gerarHorariosDisponiveis(duracaoMinutos);
+  
+  // Filtrar horários indisponíveis
   const agora = new Date();
   const hojeStr = agora.toISOString().split("T")[0];
+  const barbeiroAtual = btnBarbeiro.dataset.nome || "SemBarbeiro";
 
-  horariosDisponiveis.forEach(h => {
-    const btn = document.createElement("button");
-    btn.innerText = h;
-    btn.classList.add("horario-btn");
-
-    const [horaStr, minutoStr] = h.replace("h", ":").split(":");
+  todosHorarios = todosHorarios.filter(horario => {
+    // Converter formato "08h30" para verificação de tempo
+    const [horaStr, minutoStr] = horario.replace("h", ":").split(":");
     const horarioDate = new Date(`${dataInput}T${horaStr.padStart(2,"0")}:${minutoStr.padStart(2,"0")}:00`);
 
-    if (dataInput === hojeStr && horarioDate < agora) {
-      btn.disabled = true;
-      btn.classList.add("indisponivel");
+    // Filtrar horários que já passaram (se for hoje)
+    if (dataInput === hojeStr && horarioDate <= agora) {
+      return false;
     }
 
-    const barbeiroAtual = btnBarbeiro.dataset.nome;
-    if (horariosIndisponiveis.includes(`${barbeiroAtual}-${dataSelecionada}-${h}`)) {
-      btn.disabled = true;
-      btn.classList.add("indisponivel");
+    // Filtrar horários já ocupados
+    const chaveHorario = `${barbeiroAtual}-${dataSelecionada}-${horario}`;
+    if (horariosIndisponiveis.includes(chaveHorario)) {
+      return false;
     }
 
-    if (!btn.disabled) btn.addEventListener("click", () => selecionarHorario(h));
-    listaHorarios.appendChild(btn);
+    return true;
   });
+  
+  if (todosHorarios.length === 0) {
+    listaHorarios.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum horário disponível para este dia.</p>';
+    return;
+  }
+  
+  // Reset da paginação
+  paginaAtual = 0;
+  renderizarPaginaHorarios();
 }
 
+// Função para renderizar uma página específica de horários
+function renderizarPaginaHorarios() {
+  listaHorarios.innerHTML = "";
+  
+  // Verificar se ainda há horários disponíveis após filtros
+  if (todosHorarios.length === 0) {
+    const mensagemDiv = document.createElement("div");
+    mensagemDiv.style.cssText = `
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    `;
+    
+    const agora = new Date();
+    const hojeStr = agora.toISOString().split("T")[0];
+    const dataInput = inputData.value;
+    
+    if (dataInput === hojeStr) {
+      mensagemDiv.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 15px;">⏰</div>
+        <h4 style="margin: 0 0 10px 0; color: #333;">Horários esgotados para hoje</h4>
+        <p style="margin: 0;">Todos os horários disponíveis já passaram ou estão ocupados.</p>
+        <p style="margin: 5px 0 0 0; font-size: 14px;">Tente agendar para outro dia.</p>
+      `;
+    } else {
+      mensagemDiv.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 15px;">📅</div>
+        <h4 style="margin: 0 0 10px 0; color: #333;">Nenhum horário disponível</h4>
+        <p style="margin: 0;">Todos os horários deste dia já estão ocupados.</p>
+        <p style="margin: 5px 0 0 0; font-size: 14px;">Escolha outra data disponível.</p>
+      `;
+    }
+    
+    listaHorarios.appendChild(mensagemDiv);
+    return;
+  }
+  
+  const inicio = paginaAtual * horariosPorPagina;
+  const fim = inicio + horariosPorPagina;
+  const horariosPagina = todosHorarios.slice(inicio, fim);
+  
+  // Container dos horários
+  const containerHorarios = document.createElement("div");
+  containerHorarios.style.cssText = `
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+    min-height: 200px;
+  `;
+  
+  // Adicionar botões de horário
+  horariosPagina.forEach(horario => {
+    const btn = document.createElement("button");
+    btn.innerText = horario;
+    btn.classList.add("horario-btn");
+    btn.addEventListener("click", () => selecionarHorario(horario));
+    containerHorarios.appendChild(btn);
+  });
+  
+  listaHorarios.appendChild(containerHorarios);
+  
+  // Adicionar controles de navegação EMBAIXO
+  adicionarControlesPaginacao();
+}
+
+// Função para adicionar controles de paginação
+function adicionarControlesPaginacao() {
+  const totalPaginas = Math.ceil(todosHorarios.length / horariosPorPagina);
+  
+  if (totalPaginas <= 1) return; // Não mostrar controles se só tem 1 página
+  
+  const controlesDiv = document.createElement("div");
+  controlesDiv.style.cssText = `
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0 5px 0;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 15px;
+  `;
+  
+  // Botão Anterior
+  const btnAnterior = document.createElement("button");
+  btnAnterior.innerHTML = "←";
+  btnAnterior.style.cssText = `
+    background: ${paginaAtual === 0 ? '#f5f5f5' : '#007bff'};
+    color: ${paginaAtual === 0 ? '#ccc' : 'white'};
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: ${paginaAtual === 0 ? 'not-allowed' : 'pointer'};
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+  `;
+  btnAnterior.disabled = paginaAtual === 0;
+  btnAnterior.addEventListener("click", () => {
+    if (paginaAtual > 0) {
+      paginaAtual--;
+      renderizarPaginaHorarios();
+    }
+  });
+  
+  // Indicadores de página (pontinhos)
+  const indicadoresContainer = document.createElement("div");
+  indicadoresContainer.style.cssText = `
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  `;
+  
+  for (let i = 0; i < totalPaginas; i++) {
+    const ponto = document.createElement("div");
+    ponto.style.cssText = `
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: ${i === paginaAtual ? '#007bff' : '#ddd'};
+      cursor: pointer;
+      transition: all 0.2s ease;
+    `;
+    ponto.addEventListener("click", () => {
+      paginaAtual = i;
+      renderizarPaginaHorarios();
+    });
+    indicadoresContainer.appendChild(ponto);
+  }
+  
+  // Botão Próximo
+  const btnProximo = document.createElement("button");
+  btnProximo.innerHTML = "→";
+  btnProximo.style.cssText = `
+    background: ${paginaAtual === totalPaginas - 1 ? '#f5f5f5' : '#007bff'};
+    color: ${paginaAtual === totalPaginas - 1 ? '#ccc' : 'white'};
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: ${paginaAtual === totalPaginas - 1 ? 'not-allowed' : 'pointer'};
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+  `;
+  btnProximo.disabled = paginaAtual === totalPaginas - 1;
+  btnProximo.addEventListener("click", () => {
+    if (paginaAtual < totalPaginas - 1) {
+      paginaAtual++;
+      renderizarPaginaHorarios();
+    }
+  });
+  
+  controlesDiv.appendChild(btnAnterior);
+  controlesDiv.appendChild(indicadoresContainer);
+  controlesDiv.appendChild(btnProximo);
+  
+  listaHorarios.appendChild(controlesDiv);
+}
+
+// Função para selecionar horário
 function selecionarHorario(hora) {
   horaSelecionada = hora;
   modalHorarios.classList.add("hidden");
+  
+  // Atualizar botão de horário
   btnHorario.querySelector("span").innerHTML = `<b>Dia ${dataSelecionada} às ${horaSelecionada}</b>`;
   btnHorario.dataset.selected = "true";
+  
+  // Verificar se pode agendar e salvar estado
   verificarSePodeAgendar();
   salvarEstadoAtual();
 }
 
+// Função para reservar horário com bloqueio inteligente
+function reservarHorario(barbeiro, data, horario, duracaoMinutos) {
+  const [hora, min] = horario.replace('h', ':').split(':').map(Number);
+  const inicioMinutos = hora * 60 + min;
+  const fimMinutos = inicioMinutos + duracaoMinutos;
+  
+  // Bloquear o horário principal
+  const chaveHorario = `${barbeiro}-${data}-${horario}`;
+  if (!horariosIndisponiveis.includes(chaveHorario)) {
+    horariosIndisponiveis.push(chaveHorario);
+  }
+  
+  // Bloquear horários que seriam conflitantes
+  // Por exemplo: se agendou 12h00 com serviço de 40min (até 12h40)
+  // Deve bloquear também 12h20 (que terminaria 13h00)
+  for (let i = duracaoMinutos; i < 120; i += 20) { // Verifica até 2h de sobreposição
+    const horarioConflitante = inicioMinutos - i;
+    if (horarioConflitante >= 0) {
+      const horaConf = Math.floor(horarioConflitante / 60);
+      const minConf = horarioConflitante % 60;
+      const horarioConfFormatado = `${horaConf.toString().padStart(2, '0')}h${minConf.toString().padStart(2, '0')}`;
+      
+      const chaveConflito = `${barbeiro}-${data}-${horarioConfFormatado}`;
+      if (!horariosIndisponiveis.includes(chaveConflito)) {
+        horariosIndisponiveis.push(chaveConflito);
+      }
+    }
+  }
+  
+  localStorage.setItem("horariosIndisponiveis", JSON.stringify(horariosIndisponiveis));
+}
+
+// Função para liberar horário (caso necessário para cancelamentos)
+function liberarHorario(barbeiro, data, horario) {
+  const chaveHorario = `${barbeiro}-${data}-${horario}`;
+  const index = horariosIndisponiveis.indexOf(chaveHorario);
+  if (index > -1) {
+    horariosIndisponiveis.splice(index, 1);
+    localStorage.setItem("horariosIndisponiveis", JSON.stringify(horariosIndisponiveis));
+  }
+}
+
+// Função para debug - mostrar horários gerados
+function debugHorarios(duracaoMinutos) {
+  const horarios = gerarHorariosDisponiveis(duracaoMinutos);
+  const funcionarioNome = btnBarbeiro.dataset.nome || "Funcionário não selecionado";
+  const config = obterConfiguracaoFuncionario();
+  
+  console.log(`=== DEBUG HORÁRIOS ===`);
+  console.log(`Funcionário: ${funcionarioNome}`);
+  console.log(`Trabalha: ${config.inicio} às ${config.fim}`);
+  console.log(`Pausa: ${config.pausaInicio} às ${config.pausaFim}`);
+  console.log(`Serviço: ${duracaoMinutos} minutos`);
+  console.log(`Horários disponíveis:`, horarios);
+  console.log(`Total: ${horarios.length} slots`);
+  
+  return horarios;
+}
+console.log("Sistema de horários carregado!");
 // ============================
 // SALVAR AGENDAMENTO (COM USUÁRIO)
 // ============================

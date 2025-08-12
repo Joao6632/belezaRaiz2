@@ -74,22 +74,41 @@ function renderizarServicos() {
 }
 
 // ============================
-// CRIAR CARD DE SERVIÇO
+// CRIAR CARD DE SERVIÇO - VERSÃO CORRIGIDA
 // ============================
 function criarCardServico(servico) {
     const card = document.createElement('div');
     card.className = 'servico-card';
     card.dataset.id = servico.id;
     
-    const emoji = servico.emoji ? servico.emoji + ' ' : '';
     const preco = parseFloat(servico.preco || 0).toFixed(2).replace('.', ',');
     
+    // LÓGICA CORRIGIDA: Decide entre emoji OU foto
+    let imagemOuEmoji = '';
+    
+    if (servico.emoji && servico.emoji.trim() !== '') {
+        // Se tem emoji, usa emoji em vez da imagem
+        imagemOuEmoji = `
+            <div class="servico-emoji">
+                ${servico.emoji}
+            </div>
+        `;
+    } else {
+        // Se não tem emoji, usa a imagem
+        imagemOuEmoji = `
+            <img src="${servico.foto || '/imagens/servico-default.jpg'}" 
+                 alt="${servico.nome}" 
+                 onerror="this.src='/imagens/servico-default.jpg'">
+        `;
+    }
+    
     card.innerHTML = `
-        <img src="${servico.foto || '/imagens/servico-default.jpg'}" alt="${servico.nome}" 
-             onerror="this.src='/imagens/servico-default.jpg'">
+        ${imagemOuEmoji}
         <div class="servico-info">
-            <h5>${emoji}${servico.nome}</h5>
-            <p>${servico.descricao || 'Sem descrição'}</p>
+            <h5>${servico.nome}</h5>
+            <div class="descricao">
+                <p>${servico.descricao || 'Sem descrição'}</p>
+            </div>
             <p><strong>Duração:</strong> ${servico.duracao}</p>
             <span class="servico-tipo servico">Serviço</span>
         </div>
@@ -131,6 +150,11 @@ function setupEventListeners() {
         handleFotoUpload(e);
     });
     
+    // NOVO: Event listener para o campo emoji
+    document.getElementById('emojiServico').addEventListener('input', (e) => {
+        handleEmojiInput(e);
+    });
+    
     // Reset do modal quando fechar
     document.getElementById('modalServicoForm').addEventListener('hidden.bs.modal', () => {
         resetarModal();
@@ -167,7 +191,7 @@ function abrirModalServico(servico = null) {
 }
 
 // ============================
-// PREENCHER FORMULÁRIO (EDIÇÃO)
+// PREENCHER FORMULÁRIO - VERSÃO CORRIGIDA
 // ============================
 function preencherFormulario(servico) {
     document.getElementById('nomeServico').value = servico.nome || '';
@@ -177,16 +201,36 @@ function preencherFormulario(servico) {
     document.getElementById('tipoServico').value = servico.tipo || 'servico';
     document.getElementById('emojiServico').value = servico.emoji || '';
     
-    // Preview da foto se existir
-    if (servico.foto) {
-        const preview = document.getElementById('fotoPreview');
+    // Preview da foto ou emoji
+    const preview = document.getElementById('fotoPreview');
+    
+    if (servico.emoji && servico.emoji.trim() !== '') {
+        // Se tem emoji, mostra o emoji no preview
+        preview.innerHTML = `
+            <div class="emoji-preview">
+                <span class="emoji-large">${servico.emoji}</span>
+                <span class="emoji-label">Emoji selecionado</span>
+            </div>
+        `;
+        preview.classList.add('has-emoji');
+        preview.classList.remove('has-image');
+    } else if (servico.foto) {
+        // Se tem foto, mostra a foto
         preview.innerHTML = `<img src="${servico.foto}" alt="Preview">`;
         preview.classList.add('has-image');
+        preview.classList.remove('has-emoji');
+    } else {
+        // Se não tem nada, estado padrão
+        preview.innerHTML = `
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span>Clique para adicionar foto</span>
+        `;
+        preview.classList.remove('has-image', 'has-emoji');
     }
 }
 
 // ============================
-// RESETAR MODAL
+// RESETAR MODAL - VERSÃO CORRIGIDA
 // ============================
 function resetarModal() {
     document.getElementById('formServico').reset();
@@ -196,13 +240,13 @@ function resetarModal() {
         <i class="bi bi-cloud-arrow-up"></i>
         <span>Clique para adicionar foto</span>
     `;
-    preview.classList.remove('has-image');
+    preview.classList.remove('has-image', 'has-emoji');
     
     servicoEditando = null;
 }
 
 // ============================
-// HANDLE UPLOAD DE FOTO
+// HANDLE UPLOAD DE FOTO - VERSÃO CORRIGIDA
 // ============================
 function handleFotoUpload(event) {
     const file = event.target.files[0];
@@ -219,17 +263,50 @@ function handleFotoUpload(event) {
         return;
     }
     
+    // Limpa o emoji se o usuário escolher uma foto
+    document.getElementById('emojiServico').value = '';
+    
     const reader = new FileReader();
     reader.onload = function(e) {
         const preview = document.getElementById('fotoPreview');
         preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
         preview.classList.add('has-image');
+        preview.classList.remove('has-emoji');
     };
     reader.readAsDataURL(file);
 }
 
 // ============================
-// SALVAR SERVIÇO
+// NOVA FUNÇÃO: HANDLE INPUT DO EMOJI
+// ============================
+function handleEmojiInput(event) {
+    const emoji = event.target.value.trim();
+    const preview = document.getElementById('fotoPreview');
+    const fotoInput = document.getElementById('foto-servico');
+    
+    if (emoji !== '') {
+        // Se digitou emoji, limpa a foto e mostra preview do emoji
+        fotoInput.value = '';
+        preview.innerHTML = `
+            <div class="emoji-preview">
+                <span class="emoji-large">${emoji}</span>
+                <span class="emoji-label">Emoji selecionado</span>
+            </div>
+        `;
+        preview.classList.add('has-emoji');
+        preview.classList.remove('has-image');
+    } else {
+        // Se limpou o emoji, volta ao estado padrão
+        preview.innerHTML = `
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span>Clique para adicionar foto</span>
+        `;
+        preview.classList.remove('has-image', 'has-emoji');
+    }
+}
+
+// ============================
+// SALVAR SERVIÇO - VERSÃO CORRIGIDA
 // ============================
 function salvarServico() {
     const form = document.getElementById('formServico');
@@ -247,10 +324,16 @@ function salvarServico() {
     const tipo = document.getElementById('tipoServico').value;
     const emoji = document.getElementById('emojiServico').value.trim();
     
-    // Pega a foto (base64 ou URL existente)
-    const fotoPreview = document.getElementById('fotoPreview');
-    const imgElement = fotoPreview.querySelector('img');
-    const foto = imgElement ? imgElement.src : null;
+    // LÓGICA CORRIGIDA: Decide entre foto OU emoji
+    let foto = null;
+    
+    if (emoji === '') {
+        // Se não tem emoji, pega a foto
+        const fotoPreview = document.getElementById('fotoPreview');
+        const imgElement = fotoPreview.querySelector('img');
+        foto = imgElement ? imgElement.src : null;
+    }
+    // Se tem emoji, foto fica null
     
     // Dados do serviço
     const dadosServico = {
@@ -259,8 +342,8 @@ function salvarServico() {
         preco: parseFloat(preco),
         duracao,
         tipo,
-        emoji,
-        foto,
+        emoji: emoji || null, // null se vazio
+        foto: foto, // null se tem emoji
         dataCriacao: servicoEditando ? servicoEditando.dataCriacao : new Date().toISOString(),
         dataAtualizacao: new Date().toISOString()
     };

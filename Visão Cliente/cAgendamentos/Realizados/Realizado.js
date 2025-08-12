@@ -28,7 +28,7 @@ function obterCaminhoImagem(imagemOriginal) {
   let imgPath = imagemOriginal.toString().trim();
 
   // Se já tem o caminho completo correto, retorna
-  if (imgPath.startsWith('../../../imagens/')) {
+  if (imgPath.startsWith('')) {
     return imgPath;
   }
 
