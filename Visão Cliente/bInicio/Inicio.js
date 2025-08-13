@@ -169,8 +169,11 @@ function obterMapeamentoBarbeiros() {
 }
 
 // ============================
-// CARREGAMENTO DINÂMICO DE SERVIÇOS
+// CARREGAMENTO DINÂMICO DE SERVIÇOS - VERSÃO CORRIGIDA
 // ============================
+
+// Flag para evitar múltiplas renderizações
+let isRendering = false;
 
 // Função para carregar serviços do localStorage
 function carregarServicosDinamicamente() {
@@ -181,25 +184,55 @@ function carregarServicosDinamicamente() {
 
 // Função para criar o HTML de um serviço
 function criarHTMLServico(servico) {
-  const emoji = servico.emoji ? servico.emoji + ' ' : '';
   const preco = parseFloat(servico.preco || 0).toFixed(2).replace('.', ',');
-  const fotoSrc = servico.foto || '../../imagens/servico-default.jpg';
+  const temFoto = servico.foto && servico.foto !== '../../imagens/servico-default.jpg';
+  const temEmoji = servico.emoji && servico.emoji.trim() !== '';
+  
+  let imagemHTML = '';
+  
+  if (temFoto) {
+    // Tem foto - mostra foto com emoji pequeno no canto (se tiver)
+    imagemHTML = `
+      <div class="servico-foto-container">
+        <img src="${servico.foto}" 
+             alt="${servico.nome}" 
+             class="servico-foto-pequena" 
+             onerror="handleImageError(this)">
+        ${temEmoji ? `<span class="servico-emoji-badge">${servico.emoji}</span>` : ''}
+      </div>
+    `;
+  } else if (temEmoji) {
+    // Não tem foto, mas tem emoji - mostra emoji grande
+    imagemHTML = `
+      <div class="servico-emoji-container">
+        <span class="servico-emoji-grande">${servico.emoji}</span>
+      </div>
+    `;
+  } else {
+    // Não tem foto nem emoji - mostra imagem padrão
+    imagemHTML = `
+      <div class="servico-foto-container">
+        <img src="../../imagens/servico-default.jpg" 
+             alt="${servico.nome}" 
+             class="servico-foto-pequena">
+      </div>
+    `;
+  }
   
   return `
     <li class="servico-card" 
         data-id="${servico.id}"
         data-nome="${servico.nome}" 
-        data-img="${fotoSrc}"
+        data-img="${servico.foto || '../../imagens/servico-default.jpg'}"
         data-descricao="${servico.descricao || 'Descrição não disponível'}"
         data-preco="${preco}"
         data-duracao="${servico.duracao}"
         data-emoji="${servico.emoji || ''}">
       
-      <img src="${fotoSrc}" alt="${servico.nome}" class="servico-foto-pequena" 
-           onerror="this.src='../../imagens/servico-default.jpg'">
+      ${imagemHTML}
       
       <div class="servico-info-simples">
-        <span class="servico-nome-simples">${emoji}${servico.nome}</span>
+        <span class="servico-nome-simples">${servico.nome}</span>
         <span class="servico-preco-simples">R$ ${preco}</span>
       </div>
       <div class="arrow">›</div>
@@ -207,78 +240,198 @@ function criarHTMLServico(servico) {
   `;
 }
 
+// Função separada para lidar com erro de imagem (evita loops)
+function handleImageError(img) {
+  if (!img.dataset.errorHandled) {
+    img.dataset.errorHandled = 'true';
+    img.src = '../../imagens/servico-default.jpg';
+  }
+}
 
 // Função para renderizar a lista de serviços no modal
 function renderizarServicos() {
-  const servicos = carregarServicosDinamicamente();
-  const listaServicos = document.getElementById('servicoList');
+  // Evita renderizações simultâneas
+  if (isRendering) return;
+  isRendering = true;
   
-  if (!listaServicos) {
-    console.warn('Element #servicoList não encontrado');
-    return;
+  try {
+    const servicos = carregarServicosDinamicamente();
+    const listaServicos = document.getElementById('servicoList');
+    
+    if (!listaServicos) {
+      console.warn('Element #servicoList não encontrado');
+      return;
+    }
+    
+    // Remove listeners antigos ANTES de limpar o HTML
+    removerEventListenersServicos();
+    
+    // Limpa a lista atual
+    listaServicos.innerHTML = '';
+    
+    // Se não há serviços cadastrados
+    if (servicos.length === 0) {
+      listaServicos.innerHTML = `
+        <li style="text-align: center; padding: 20px; color: #666;">
+          <div class="no-services">
+            <i class="bi bi-scissors" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <p><strong>Nenhum serviço disponível</strong></p>
+            <p><small>Os serviços aparecerão aqui quando forem cadastrados pelo estabelecimento.</small></p>
+          </div>
+        </li>
+      `;
+      return;
+    }
+    
+    // Adiciona cada serviço à lista
+    servicos.forEach(servico => {
+      listaServicos.innerHTML += criarHTMLServico(servico);
+    });
+    
+    // Aplica os event listeners uma única vez
+    aplicarEventListenersServicos();
+    
+  } finally {
+    isRendering = false;
   }
-  
-  // Limpa a lista atual
-  listaServicos.innerHTML = '';
-  
-  // Se não há serviços cadastrados
-  if (servicos.length === 0) {
-    listaServicos.innerHTML = `
-      <li style="text-align: center; padding: 20px; color: #666;">
-        <div class="no-services">
-          <i class="bi bi-scissors" style="font-size: 2rem; margin-bottom: 10px;"></i>
-          <p><strong>Nenhum serviço disponível</strong></p>
-          <p><small>Os serviços aparecerão aqui quando forem cadastrados pelo estabelecimento.</small></p>
-        </div>
-      </li>
-    `;
-    return;
-  }
-  
-  // Adiciona cada serviço à lista
-  servicos.forEach(servico => {
-    listaServicos.innerHTML += criarHTMLServico(servico);
-  });
-  
-  // Reaplica os event listeners para os novos elementos
-  aplicarEventListenersServicos();
 }
 
-// Função para aplicar event listeners aos serviços
-function aplicarEventListenersServicos() {
+// Função para remover event listeners antigos
+function removerEventListenersServicos() {
   const servicoItems = document.querySelectorAll('.servico-list .servico-card');
+  servicoItems.forEach(item => {
+    // Remove o listener se existir
+    if (item._clickHandler) {
+      item.removeEventListener('click', item._clickHandler);
+      item._clickHandler = null;
+    }
+  });
+}
+
+// Função para aplicar event listeners aos serviços (CORRIGIDA)
+// Função para aplicar event listeners aos serviços (CORRIGIDA)
+function aplicarEventListenersServicos() {
+  // CORREÇÃO: Buscar por ID #servicoList, não por classe .servico-list
+  const servicoItems = document.querySelectorAll('#servicoList .servico-card');
   const modalServicos = document.getElementById('modalServicos');
   const modalServicoDetalhe = document.getElementById('modalServicoDetalhe');
   
   servicoItems.forEach(item => {
-    // Remove listeners anteriores para evitar duplicação
-    const novoItem = item.cloneNode(true);
-    item.parentNode.replaceChild(novoItem, item);
+    // Verifica se já tem listener para evitar duplicação
+    if (item._clickHandler) return;
     
-    // Adiciona novo listener
-    novoItem.addEventListener('click', () => {
+    // Cria a função handler
+    const clickHandler = function() {
       // Preenche o modal de detalhes com os dados do serviço
-      const nome = novoItem.dataset.nome;
-      const img = novoItem.dataset.img;
-      const descricao = novoItem.dataset.descricao;
-      const preco = novoItem.dataset.preco;
-      const duracao = novoItem.dataset.duracao;
+      const nome = item.dataset.nome;
+      const img = item.dataset.img;
+      const descricao = item.dataset.descricao;
+      const preco = item.dataset.preco;
+      const duracao = item.dataset.duracao;
       
-      // Atualiza elementos do modal de detalhe
-      document.getElementById('detalheTitulo').textContent = nome;
-      document.getElementById('detalheImg').src = img;
-      document.getElementById('detalheImg').alt = nome;
-      document.getElementById('detalheDescricao').textContent = descricao;
-      document.getElementById('detalhePreco').textContent = preco;
-      document.getElementById('detalheDuracao').textContent = duracao;
+      // Verifica se os elementos existem antes de usar
+      const detalheTitulo = document.getElementById('detalheTitulo');
+      const detalheImg = document.getElementById('detalheImg');
+      const detalheDescricao = document.getElementById('detalheDescricao');
+      const detalhePreco = document.getElementById('detalhePreco');
+      const detalheDuracao = document.getElementById('detalheDuracao');
+      
+      if (detalheTitulo) detalheTitulo.textContent = nome;
+      if (detalheImg) {
+        detalheImg.src = img;
+        detalheImg.alt = nome;
+        // Reset do error handler para a nova imagem
+        delete detalheImg.dataset.errorHandled;
+      }
+      if (detalheDescricao) detalheDescricao.textContent = descricao;
+      if (detalhePreco) detalhePreco.textContent = preco;
+      if (detalheDuracao) detalheDuracao.textContent = duracao;
       
       // Salva referência do serviço selecionado
-      servicoSelecionado = novoItem;
+      window.servicoSelecionado = item;
+      
+      // Atualiza o botão principal com o serviço selecionado
+      atualizarBotaoServicoSelecionado(item);
       
       // Fecha modal de lista e abre modal de detalhes
-      modalServicos.classList.add('hidden');
-      modalServicoDetalhe.classList.remove('hidden');
-    });
+      if (modalServicos) modalServicos.classList.add('hidden');
+      if (modalServicoDetalhe) modalServicoDetalhe.classList.remove('hidden');
+    };
+    
+    // Guarda referência do handler no elemento
+    item._clickHandler = clickHandler;
+    
+    // Adiciona o listener
+    item.addEventListener('click', clickHandler);
+  });
+}
+
+// Função para atualizar o botão principal quando um serviço é selecionado
+function atualizarBotaoServicoSelecionado(servicoElement) {
+  const servicoInfo = document.querySelector('.servico-info');
+  const servicoFoto = document.querySelector('.servico-foto');
+  const servicoNome = document.querySelector('.servico-nome');
+  
+  if (!servicoInfo || !servicoNome) return;
+  
+  const nome = servicoElement.dataset.nome;
+  const img = servicoElement.dataset.img;
+  const emoji = servicoElement.dataset.emoji;
+  const temFoto = img && img !== '../../imagens/servico-default.jpg';
+  const temEmoji = emoji && emoji.trim() !== '';
+  
+  // Atualiza o nome
+  servicoNome.textContent = nome;
+  
+  // Remove elementos antigos de foto/emoji
+  const fotoExistente = servicoInfo.querySelector('.servico-foto');
+  const emojiExistente = servicoInfo.querySelector('.servico-emoji-botao');
+  
+  if (fotoExistente) fotoExistente.remove();
+  if (emojiExistente) emojiExistente.remove();
+  
+  // Adiciona a nova imagem ou emoji
+  let novoElemento;
+  
+  if (temFoto) {
+    // Tem foto - cria elemento img
+    novoElemento = document.createElement('img');
+    novoElemento.src = img;
+    novoElemento.alt = nome;
+    novoElemento.className = 'servico-foto';
+    novoElemento.onerror = function() {
+      if (!this.dataset.errorHandled) {
+        this.dataset.errorHandled = 'true';
+        this.src = '../../imagens/servico-default.jpg';
+      }
+    };
+  } else if (temEmoji) {
+    // Não tem foto, mas tem emoji - cria container com emoji
+    novoElemento = document.createElement('div');
+    novoElemento.className = 'servico-emoji-botao';
+    novoElemento.textContent = emoji;
+  } else {
+    // Não tem foto nem emoji - usa imagem padrão
+    novoElemento = document.createElement('img');
+    novoElemento.src = '../../imagens/servico-default.jpg';
+    novoElemento.alt = nome;
+    novoElemento.className = 'servico-foto';
+  }
+  
+  // Insere o novo elemento no início do servicoInfo
+  servicoInfo.insertBefore(novoElemento, servicoInfo.firstChild);
+}
+
+// Função para remover event listeners antigos (CORRIGIDA)
+function removerEventListenersServicos() {
+  // CORREÇÃO: Buscar por ID #servicoList, não por classe .servico-list
+  const servicoItems = document.querySelectorAll('#servicoList .servico-card');
+  servicoItems.forEach(item => {
+    // Remove o listener se existir
+    if (item._clickHandler) {
+      item.removeEventListener('click', item._clickHandler);
+      item._clickHandler = null;
+    }
   });
 }
 
@@ -417,22 +570,19 @@ cancelarServico.addEventListener('click', () => {
 
 
 // Event listener para confirmar seleção
-confirmarServico.addEventListener('click', () => {
-  if (servicoSelecionado) {
-    const nome = servicoSelecionado.dataset.nome;
-    const img = servicoSelecionado.dataset.img;
-    const preco = servicoSelecionado.dataset.preco;
-    const duracao = servicoSelecionado.dataset.duracao;
-    const emoji = servicoSelecionado.dataset.emoji;
+confirmarServico.addEventListener('click', (e) => {
+  e.preventDefault();
+  console.log('Botão clicado!', window.servicoSelecionado); // Para debug
+  
+  if (window.servicoSelecionado) {
+    const nome = window.servicoSelecionado.dataset.nome;
+    const img = window.servicoSelecionado.dataset.img;
+    const preco = window.servicoSelecionado.dataset.preco;
+    const duracao = window.servicoSelecionado.dataset.duracao;
+    const emoji = window.servicoSelecionado.dataset.emoji || '';
 
-    // ✅ ATUALIZA IGUAL AO BARBEIRO - SÓ FOTO + NOME
-    btnServico.innerHTML = `
-      <div class="servico-info">
-        <img src="${img}" alt="${nome}" class="servico-foto" onerror="this.src='../../imagens/servico-default.jpg'">
-        <span class="servico-nome">${emoji ? emoji + ' ' : ''}${nome}</span>
-      </div>
-      <div class="arrow">›</div>
-    `;
+    // USA A FUNÇÃO renderizarBotaoServico
+    btnServico.innerHTML = renderizarBotaoServico(nome, img, preco, emoji);
     
     // Marca como selecionado e salva os dados
     btnServico.dataset.selected = "true";
@@ -448,6 +598,8 @@ confirmarServico.addEventListener('click', () => {
     // Verifica se pode agendar e salva o estado
     verificarSePodeAgendar();
     salvarEstadoAtual();
+  } else {
+    alert('Erro: Nenhum serviço foi selecionado.');
   }
 });
 

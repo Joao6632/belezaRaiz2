@@ -198,10 +198,12 @@ function ativarFiltroBusca() {
 // ============================
 let avaliacaoAtual = 0;
 let barbeiroAtual = ''; // ID do barbeiro
+let nomeBarbeiroAtual = ''; // Nome do barbeiro
 let agendamentoAtual = ''; // ID do agendamento para controle
 
 function abrirModalAvaliacao(idBarbeiro, nomeBarbeiro, idAgendamento) {
   barbeiroAtual = idBarbeiro;
+  nomeBarbeiroAtual = nomeBarbeiro;
   agendamentoAtual = idAgendamento;
   avaliacaoAtual = 0;
   
@@ -209,9 +211,15 @@ function abrirModalAvaliacao(idBarbeiro, nomeBarbeiro, idAgendamento) {
   if (modal) {
     modal.classList.remove('hidden');
     
-    // Se tiver um span para mostrar nome do barbeiro no modal, atualize
+    // Atualiza nome do barbeiro no modal
     const nomeSpan = document.getElementById('nomeBarbeiroModal');
     if (nomeSpan) nomeSpan.textContent = nomeBarbeiro;
+
+    // LIMPA o campo de comentário para nova avaliação
+    const comentarioInput = document.getElementById('comentarioAvaliacao');
+    if (comentarioInput) {
+      comentarioInput.value = '';
+    }
 
     gerarEstrelas();
   } else {
@@ -227,6 +235,7 @@ function fecharModal() {
   // Reset valores
   avaliacaoAtual = 0;
   barbeiroAtual = '';
+  nomeBarbeiroAtual = '';
   agendamentoAtual = '';
 }
 
@@ -262,8 +271,45 @@ function selecionarEstrelas(qtd) {
 function confirmarAvaliacao() {
   const idBarbeiro = barbeiroAtual;
   const nota = avaliacaoAtual;
-  const chave = 'avaliacoesBarbeiros';
-
+  
+  // MÚLTIPLAS TENTATIVAS para capturar o comentário
+  let comentario = '';
+  
+  // Tenta várias formas de encontrar o campo de comentário
+  const possiveisElementos = [
+    document.getElementById('comentarioAvaliacao'),
+    document.querySelector('#comentarioAvaliacao'),
+    document.querySelector('textarea'),
+    document.querySelector('input[name="comentario"]'),
+    document.querySelector('[placeholder*="comentário"]'),
+    document.querySelector('[placeholder*="Comentário"]'),
+    document.querySelector('.modal textarea'),
+    document.querySelector('#modalAvaliacao textarea'),
+    document.querySelector('#modalAvaliacao input[type="text"]')
+  ];
+  
+  // Encontra o primeiro elemento válido
+  let comentarioElement = null;
+  for (let elemento of possiveisElementos) {
+    if (elemento && elemento.value !== undefined) {
+      comentarioElement = elemento;
+      break;
+    }
+  }
+  
+  if (comentarioElement) {
+    comentario = comentarioElement.value || '';
+    comentario = comentario.trim();
+    console.log('✅ Comentário capturado:', `"${comentario}"`);
+    console.log('✅ Elemento usado:', comentarioElement);
+  } else {
+    console.error('❌ NENHUM campo de comentário encontrado!');
+    console.log('❌ Elementos HTML disponíveis:');
+    document.querySelectorAll('input, textarea').forEach((el, i) => {
+      console.log(`  ${i}: `, el, `value: "${el.value}"`);
+    });
+  }
+  
   if (!idBarbeiro) {
     alert('Erro: ID do barbeiro não encontrado!');
     return;
@@ -274,28 +320,53 @@ function confirmarAvaliacao() {
     return;
   }
 
-  // Salva a avaliação do barbeiro
-  const avaliacoes = JSON.parse(localStorage.getItem(chave)) || {};
-  if (!avaliacoes[idBarbeiro]) {
-    avaliacoes[idBarbeiro] = [];
-  }
-  avaliacoes[idBarbeiro].push(nota);
-  localStorage.setItem(chave, JSON.stringify(avaliacoes));
+  // Pega dados do usuário logado para salvar junto
+  const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+  const nomeCliente = usuarioLogado?.nome || 'Cliente Anônimo';
 
-  // Marca o agendamento como avaliado para desabilitar botão
+  // Salva avaliação completa
+  const avaliacoesCompletas = JSON.parse(localStorage.getItem('avaliacoesCompletas')) || [];
+  
+  const novaAvaliacao = {
+    id: Date.now(),
+    idBarbeiro: idBarbeiro,
+    nomeBarbeiro: nomeBarbeiroAtual || 'Barbeiro',
+    nomeCliente: nomeCliente,
+    nota: nota,
+    comentario: comentario,
+    data: new Date().toLocaleDateString('pt-BR'),
+    hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    idAgendamento: agendamentoAtual
+  };
+
+  avaliacoesCompletas.push(novaAvaliacao);
+  localStorage.setItem('avaliacoesCompletas', JSON.stringify(avaliacoesCompletas));
+
+  // Mantém compatibilidade com sistema de estrelas
+  const avaliacoesBarbeiros = JSON.parse(localStorage.getItem('avaliacoesBarbeiros')) || {};
+  if (!avaliacoesBarbeiros[idBarbeiro]) {
+    avaliacoesBarbeiros[idBarbeiro] = [];
+  }
+  avaliacoesBarbeiros[idBarbeiro].push(nota);
+  localStorage.setItem('avaliacoesBarbeiros', JSON.stringify(avaliacoesBarbeiros));
+
+  // Marca agendamento como avaliado
   const avaliacoesFeitas = JSON.parse(localStorage.getItem('avaliacoesFeitas')) || {};
   avaliacoesFeitas[agendamentoAtual] = true;
   localStorage.setItem('avaliacoesFeitas', JSON.stringify(avaliacoesFeitas));
 
-  alert(`Avaliação de ${nota} estrelas enviada com sucesso!`);
+  const mensagem = comentario.length > 0 
+    ? `Avaliação de ${nota} estrelas com comentário enviada com sucesso!`
+    : `Avaliação de ${nota} estrelas enviada com sucesso!`;
+  
+  alert(mensagem);
   
   fecharModal();
-  atualizarNotasBarbeiros();
   
-  // Recarrega a lista para atualizar os botões
-  const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-  if (usuarioLogado) {
-    carregarRealizados(usuarioLogado);
+  // Recarrega a lista
+  const usuarioLogadoAtual = JSON.parse(localStorage.getItem('usuarioLogado'));
+  if (usuarioLogadoAtual) {
+    carregarRealizados(usuarioLogadoAtual);
   }
 }
 
@@ -334,9 +405,8 @@ function calcularMedia(avaliacoes) {
   return soma / avaliacoes.length;
 }
 
-// Event listeners para fechar modal (se existirem)
+// Event listeners para fechar modal
 document.addEventListener('DOMContentLoaded', () => {
-  // Fechar modal clicando no X ou fora dele
   const modal = document.getElementById('modalAvaliacao');
   const btnFechar = document.getElementById('fecharModal');
   const btnCancelar = document.getElementById('cancelarAvaliacao');
@@ -357,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // ESC para fechar modal
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
       fecharModal();
