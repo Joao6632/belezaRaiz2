@@ -1,14 +1,21 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=Visão Cliente/aCadastro.html">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>Redirecionando...</title>
 </head>
 <body>
+  <script>
+    // Tenta diferentes formatos de URL
+    const caminhos = [
+      './Visão Cliente/aCadastro.html',
+      './Vis%C3%A3o%20Cliente/aCadastro.html',
+      'Visão Cliente/aCadastro.html'
+    ];
     
-</body>
-</html>
+    // Usa o primeiro caminho
+    window.location.href = caminhos[0];
+  </script>
+  
+  <!-- Fallback caso JS esteja desabilitado -->
+  <noscript>
