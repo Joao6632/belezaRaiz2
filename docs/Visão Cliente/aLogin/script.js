@@ -32,17 +32,14 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
-// 🔹 Garante que apenas o gerente fixo exista
-function seedGerente() {
+// 🔹 Garante que apenas o gerente fixo e cliente Kelly existam
+function seedUsuarios() {
   let users = loadUsers();
   
-  // Verifica se já existe o gerente
-  if (users.some(u => u.tipo === "gerente" && u.login === "joaov@barbearia.com")) return;
-
   // Remove barbeiros fixos antigos se existirem
   users = users.filter(u => u.tipo !== "barbeiro" || !u.id?.startsWith("barbeiro"));
 
-  // Adiciona apenas o gerente fixo
+  // Adiciona o gerente fixo se não existir
   const gerenteExiste = users.find(u => u.tipo === "gerente" && u.login === "joaov@barbearia.com");
   if (!gerenteExiste) {
     users.push({
@@ -51,6 +48,18 @@ function seedGerente() {
       senha: "123456", 
       tipo: "gerente", 
       id: "gerente1"
+    });
+  }
+
+  // Adiciona a cliente Kelly se não existir
+  const kellyExiste = users.find(u => u.tipo === "cliente" && u.login === "kelly@cliente.com");
+  if (!kellyExiste) {
+    users.push({
+      nome: "Kelly", 
+      login: "kelly@cliente.com", 
+      senha: "123456", 
+      tipo: "cliente", 
+      id: "cliente_kelly"
     });
   }
 
@@ -89,7 +98,7 @@ function buscarUsuario(loginNormalizado) {
 
 // ==== Lógica do Login ====
 document.addEventListener('DOMContentLoaded', () => {
-  seedGerente(); // garante apenas o gerente no LocalStorage
+  seedUsuarios(); // garante gerente e cliente Kelly no LocalStorage
 
   const loginInput = document.getElementById('loginInput');
   const passwordInput = document.getElementById('senhaInput');
