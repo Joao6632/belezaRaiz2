@@ -174,11 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🔹 Redirecionamento baseado no tipo
     if (user.tipo === "barbeiro") {
-      window.location.href = "../Visão Barbeiro/Agendamentos/Agen.html";
+      window.location.href = "../Visão%20Barbeiro/Agendamentos/Agen.html";
     } else if (user.tipo === "gerente") {
-      window.location.href = "../Visão Dono/index.html";
+      window.location.href = "../Visão%20Dono/index.html";
     } else {
-      window.location.href = "../Visão Cliente/bInicio/Inicio.html"; // cliente ou outro tipo
+      window.location.href = "../Visão%20Cliente/bInicio/inicio.html"; // cliente ou outro tipo
     }
   });
 
