@@ -174,12 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🔹 Redirecionamento baseado no tipo
     if (user.tipo === "barbeiro") {
-      window.location.href = "../Visão%20Barbeiro/Agendamentos/Agen.html";
+      window.location.href = "docs/Visão%20Barbeiro/Agendamentos/Agen.html";
     } else if (user.tipo === "gerente") {
-      window.location.href = "../Visão%20Dono/aInicio/index.html";
+      window.location.href = "docs/Visão%20Dono/aInicio/index.html";
     } else {
       // Debug: vamos ver onde estamos tentando ir
-      const clientPath = "../Visão%20Cliente/bInicio/inicio.html";
+      const clientPath = "docs/Visão%20Cliente/bInicio/Inicio.html";
       console.log("Tentando redirecionar cliente para:", clientPath);
       alert("Redirecionando para: " + clientPath); // temporário para debug
       window.location.href = clientPath;
