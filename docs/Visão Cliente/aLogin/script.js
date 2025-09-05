@@ -176,9 +176,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user.tipo === "barbeiro") {
       window.location.href = "../Visão%20Barbeiro/Agendamentos/Agen.html";
     } else if (user.tipo === "gerente") {
-      window.location.href = "../Visão%20Dono/index.html";
+      window.location.href = "../Visão%20Dono/aInicio/index.html";
     } else {
-      window.location.href = "../Visão%20Cliente/bInicio/inicio.html"; // cliente ou outro tipo
+      // Debug: vamos ver onde estamos tentando ir
+      const clientPath = "../Visão%20Cliente/bInicio/inicio.html";
+      console.log("Tentando redirecionar cliente para:", clientPath);
+      alert("Redirecionando para: " + clientPath); // temporário para debug
+      window.location.href = clientPath;
     }
   });
 
