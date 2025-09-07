@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       saveUsers(users);
 
       alert('Cadastro realizado com sucesso!');
-      window.location.href = '../aLogin/index.html';
+      window.location.href = '../../../index.html';
     });
   }
 });
