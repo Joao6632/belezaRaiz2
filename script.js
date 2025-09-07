@@ -180,8 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       // Debug: vamos ver onde estamos tentando ir
       const clientPath = "/docs/Visão%20Cliente/bInicio/Inicio.html";
-      console.log("Tentando redirecionar cliente para:", clientPath);
-      alert("Redirecionando para: " + clientPath); // temporário para debug
+
       window.location.href = clientPath;
     }
   });
