@@ -1,3 +1,29 @@
+// ==== API Configuration ====
+const API_BASE_URL = 'http://localhost:8080/api/auth';
+
+// ==== API Functions ====
+async function loginUser(credentials) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials)
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Erro no login');
+    }
+    
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 // ==== Utils ====
 
 // 🔹 Normaliza login (email lowercase ou telefone com só dígitos)
@@ -17,88 +43,38 @@ function maskPhoneBR(digits) {
   return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 }
 
-// 🔹 Carrega usuários do LocalStorage
-function loadUsers() {
-  return JSON.parse(localStorage.getItem('users') || '[]');
+// 🔹 Salva dados de autenticação
+function saveAuthData(authResponse) {
+  localStorage.setItem('token', authResponse.token);
+  localStorage.setItem('usuarioLogado', JSON.stringify({
+    id: authResponse.id,
+    nome: authResponse.nome,
+    login: authResponse.login,
+    tipo: authResponse.tipo,
+    loginType: authResponse.loginType
+  }));
 }
 
-// 🔹 Carrega funcionários do LocalStorage
-function loadFuncionarios() {
-  return JSON.parse(localStorage.getItem('funcionarios') || '[]');
-}
-
-// 🔹 Salva usuários
-function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
-
-// 🔹 Garante que apenas o gerente fixo e cliente Kelly existam
-function seedUsuarios() {
-  let users = loadUsers();
+// 🔹 Verifica se usuário já está logado
+function checkExistingAuth() {
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('usuarioLogado');
   
-  // Remove barbeiros fixos antigos se existirem
-  users = users.filter(u => u.tipo !== "barbeiro" || !u.id?.startsWith("barbeiro"));
-
-  // Adiciona o gerente fixo se não existir
-  const gerenteExiste = users.find(u => u.tipo === "gerente" && u.login === "joaov@barbearia.com");
-  if (!gerenteExiste) {
-    users.push({
-      nome: "CEO João", 
-      login: "joaov@barbearia.com", 
-      senha: "123456", 
-      tipo: "gerente", 
-      id: "gerente1"
-    });
+  if (token && user) {
+    // Usuário já logado, pode redirecionar se necessário
+    return JSON.parse(user);
   }
-
-  // Adiciona a cliente Kelly se não existir
-  const kellyExiste = users.find(u => u.tipo === "cliente" && u.login === "kelly@cliente.com");
-  if (!kellyExiste) {
-    users.push({
-      nome: "Kelly", 
-      login: "kelly@cliente.com", 
-      senha: "123456", 
-      tipo: "cliente", 
-      id: "cliente_kelly"
-    });
-  }
-
-  saveUsers(users);
-}
-
-// 🔹 Busca usuário no sistema (users + funcionários)
-function buscarUsuario(loginNormalizado) {
-  // 1. Busca nos usuários (gerente e clientes)
-  const users = loadUsers();
-  let usuario = users.find(u => normalizeLogin(u.login) === loginNormalizado);
-  
-  if (usuario) return usuario;
-
-  // 2. Busca nos funcionários (barbeiros dinâmicos)
-  const funcionarios = loadFuncionarios();
-  const funcionario = funcionarios.find(f => 
-    f.situacao === "Ativo" && normalizeLogin(f.email) === loginNormalizado
-  );
-
-  if (funcionario) {
-    // Converte funcionário para formato de usuário
-    return {
-      id: funcionario.id,
-      nome: funcionario.nome,
-      login: funcionario.email,
-      senha: funcionario.senha,
-      tipo: "barbeiro", // Funcionários ativos são barbeiros
-      dataCadastro: funcionario.dataCadastro,
-      situacao: funcionario.situacao
-    };
-  }
-
   return null;
 }
 
 // ==== Lógica do Login ====
 document.addEventListener('DOMContentLoaded', () => {
-  seedUsuarios(); // garante gerente e cliente Kelly no LocalStorage
+  // Verifica se já está logado
+  const existingUser = checkExistingAuth();
+  if (existingUser) {
+    console.log('Usuário já logado:', existingUser.nome);
+    // Opcionalmente pode redirecionar aqui
+  }
 
   const loginInput = document.getElementById('loginInput');
   const passwordInput = document.getElementById('senhaInput');
@@ -138,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 🔹 Ao clicar em login
-  loginBtn.addEventListener('click', (e) => {
+  loginBtn.addEventListener('click', async (e) => {
     e.preventDefault();
 
     const rawLogin = loginInput.value.trim();
@@ -155,37 +131,63 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 🔥 Busca usuário no sistema integrado
-    const user = buscarUsuario(loginKey);
+    // Dados para enviar à API
+    const credentials = {
+      login: loginKey,
+      senha: senha
+    };
 
-    if (!user) {
-      alert('Conta não encontrada.');
-      return;
-    }
+    // Desabilitar botão e mostrar loading
+    const originalText = loginBtn.textContent;
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Entrando...';
 
-    if (user.senha !== senha) {
-      alert('Senha incorreta.');
-      return;
-    }
+    try {
+      // 🔥 Chamar API de login
+      const response = await loginUser(credentials);
+      
+      // Salvar dados de autenticação
+      saveAuthData(response);
+      
+      // ✅ Login OK
+      alert(`Bem-vindo, ${response.nome}!`);
 
-    // ✅ Login OK
-    alert(`Bem-vindo, ${user.nome}!`);
-    localStorage.setItem("usuarioLogado", JSON.stringify(user));
-
-    // 🔹 Redirecionamento baseado no tipo
-    if (user.tipo === "barbeiro") {
-      window.location.href = "/docs/Visão%20Barbeiro/Agendamentos/Agen.html";
-    } else if (user.tipo === "gerente") {
-      window.location.href = "/docs/Visão%20Dono/aInicio/index.html";
-    } else {
-      // Debug: vamos ver onde estamos tentando ir
-      const clientPath = "/docs/Visão%20Cliente/bInicio/Inicio.html";
-
-      window.location.href = clientPath;
+      // 🔹 Redirecionamento baseado no tipo
+      if (response.tipo === "barbeiro") {
+        window.location.href = "/docs/Visão%20Barbeiro/Agendamentos/Agen.html";
+      } else if (response.tipo === "gerente") {
+        window.location.href = "/docs/Visão%20Dono/aInicio/index.html";
+      } else if (response.tipo === "cliente") {
+        window.location.href = "/docs/Visão%20Cliente/bInicio/Inicio.html";
+      } else {
+        // Fallback para tipos não esperados
+        window.location.href = "/index.html";
+      }
+      
+    } catch (error) {
+      console.error('Erro no login:', error);
+      
+      // Mostrar erro específico baseado na mensagem
+      if (error.message.includes('Credenciais inválidas')) {
+        alert('Email/telefone ou senha incorretos.');
+      } else if (error.message.includes('não encontrado')) {
+        alert('Conta não encontrada.');
+      } else {
+        alert('Erro ao fazer login. Verifique sua conexão e tente novamente.');
+      }
+      
+      // Restaurar botão
+      loginBtn.disabled = false;
+      loginBtn.textContent = originalText;
     }
   });
 
-  // 🔹 Debug: mostra usuários disponíveis no console (remover em produção)
-  console.log("Usuários:", loadUsers());
-  console.log("Funcionários:", loadFuncionarios());
+  // 🔹 Enter para fazer login
+  [loginInput, passwordInput].forEach(input => {
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        loginBtn.click();
+      }
+    });
+  });
 });

@@ -1,17 +1,30 @@
-// ==== Storage utils ====
-const loadUsers = () => JSON.parse(localStorage.getItem('users') || '[]');
-const saveUsers = (arr) => localStorage.setItem('users', JSON.stringify(arr));
+// ==== API Configuration ====
+const API_BASE_URL = 'http://localhost:8080/api/auth';
 
-// Gera UUID simples (substitui crypto.randomUUID)
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+// ==== API Functions ====
+async function registerUser(userData) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData)
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Erro no cadastro');
+    }
+    
+    return data;
+  } catch (error) {
+    throw error;
+  }
 }
 
-// Normaliza para salvar/validar: email em lowercase OU telefone só dígitos
+// Normaliza para enviar para API: email em lowercase OU telefone só dígitos
 function normalizeLogin(value) {
   const v = String(value || '').trim();
   if (!v) return '';
@@ -28,6 +41,18 @@ function maskPhoneBR(digits) {
   return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`; // 11 dígitos
 }
 
+// Salvar token no localStorage
+function saveAuthData(authResponse) {
+  localStorage.setItem('token', authResponse.token);
+  localStorage.setItem('user', JSON.stringify({
+    id: authResponse.id,
+    nome: authResponse.nome,
+    login: authResponse.login,
+    tipo: authResponse.tipo,
+    loginType: authResponse.loginType
+  }));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('formCadastro');
   const nomeEl = document.getElementById('nome');
@@ -40,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     val = val.trim();
 
     if (!val) {
-      contatoEl.value = ''; // limpa se vazio, sem '(' na tela
+      contatoEl.value = '';
       return;
     }
 
@@ -48,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
       contatoEl.dataset.type = 'email';
       contatoEl.setAttribute('inputmode', 'email');
       contatoEl.maxLength = 254;
-      contatoEl.value = val; // mantém email puro
+      contatoEl.value = val;
       return;
     }
 
@@ -59,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
       contatoEl.maxLength = 16;
       contatoEl.value = maskPhoneBR(digits);
     } else {
-      // letras antes do @, deixa passar sem máscara
       contatoEl.dataset.type = 'email';
       contatoEl.setAttribute('inputmode', 'email');
       contatoEl.maxLength = 254;
@@ -75,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const nome = nomeEl.value.trim();
@@ -83,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const senha = senhaEl.value;
       const confirmar = confirmarEl.value;
 
+      // Validações frontend
       if (!nome || !contatoRaw || !senha || !confirmar) {
         alert('Preencha todos os campos.');
         return;
@@ -115,25 +140,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const users = loadUsers();
-      if (users.some(u => u.login === loginKey)) {
-        alert('Já existe uma conta com esse email/telefone.');
-        return;
-      }
-
-      const user = {
-        id: generateUUID(),
-        nome,
+      // Dados para enviar à API
+      const userData = {
+        nome: nome,
         login: loginKey,
-        senha,
-        createdAt: Date.now()
+        senha: senha
       };
 
-      users.push(user);
-      saveUsers(users);
+      // Desabilitar botão e mostrar loading
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Cadastrando...';
 
-      alert('Cadastro realizado com sucesso!');
-      window.location.href = '../../../index.html';
+      try {
+        // Chamar API
+        const response = await registerUser(userData);
+        
+        // Salvar dados de autenticação
+        saveAuthData(response);
+        
+        // Sucesso
+        alert('Cadastro realizado com sucesso!');
+        
+        // Redirecionar baseado no tipo de usuário
+        if (response.tipo === 'cliente') {
+          window.location.href = '../../../index.html'; // ou página do cliente
+        } else if (response.tipo === 'gerente') {
+          window.location.href = '../../../gerente/dashboard.html'; // página do gerente
+        } else if (response.tipo === 'barbeiro') {
+          window.location.href = '../../../barbeiro/dashboard.html'; // página do barbeiro
+        }
+        
+      } catch (error) {
+        console.error('Erro no cadastro:', error);
+        alert(error.message || 'Erro ao realizar cadastro. Tente novamente.');
+        
+        // Restaurar botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     });
   }
 });
