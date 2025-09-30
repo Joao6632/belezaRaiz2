@@ -45,10 +45,17 @@ public class AuthService {
         user.setNome(request.getNome());
         user.setLogin(request.getLogin());
         user.setSenha(passwordEncoder.encode(request.getSenha()));
-        user.setTipo("cliente");
+        
+        // ✅ CORREÇÃO: Aceitar o tipo que vem na requisição
+        // Se não vier tipo, usa "cliente" como padrão
+        String tipo = request.getTipo();
+        if (tipo == null || tipo.isBlank()) {
+            tipo = "cliente";
+        }
+        user.setTipo(tipo.toLowerCase()); // Garantir lowercase
         
         user = userRepository.save(user);
-        log.info("Usuário registrado com sucesso. ID: {}", user.getId());
+        log.info("Usuário registrado com sucesso. ID: {}, Tipo: {}", user.getId(), user.getTipo());
         
         String token = jwtUtil.generateToken(user);
         return new AuthResponse(token, user.getId(), user.getNome(), 

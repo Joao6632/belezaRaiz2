@@ -17,4 +17,7 @@ public class RegisterRequest {
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, message = "Senha deve ter pelo menos 6 caracteres")
     private String senha;
+    
+    // ✅ Campo adicionado - não é obrigatório, padrão será "cliente"
+    private String tipo;
 }
