@@ -1,34 +1,42 @@
+// ==== API Configuration ====
+const API_BASE_URL = 'http://localhost:8080/api/auth';
 
-
-    // Inicializar eventos do formulário
+// ==== Inicialização ====
+document.addEventListener('DOMContentLoaded', function() {
     inicializarFormulario();
-
+    inicializarPreviewFoto();
+    inicializarValidacaoHorario();
+});
 
 // Preview da foto de perfil
-document.getElementById('foto-perfil').addEventListener('change', function (event) {
-    const file = event.target.files[0];
-    const preview = document.getElementById('fotoPreview');
+function inicializarPreviewFoto() {
+    document.getElementById('foto-perfil').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('fotoPreview');
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.style.backgroundImage = `url(${e.target.result})`;
-            preview.innerHTML = ""; // remove o ícone
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.style.backgroundImage = `url(${e.target.result})`;
+                preview.innerHTML = ""; // remove o ícone
+            }
+            reader.readAsDataURL(file);
         }
-        reader.readAsDataURL(file);
-    }
-});
+    });
+}
 
 // Validação de horário
-const inicioInput = document.getElementById("horarioInicio");
-const fimInput = document.getElementById("horarioFim");
+function inicializarValidacaoHorario() {
+    const inicioInput = document.getElementById("horarioInicio");
+    const fimInput = document.getElementById("horarioFim");
 
-fimInput.addEventListener("change", () => {
-    if (fimInput.value && inicioInput.value && fimInput.value <= inicioInput.value) {
-        alert("O horário final precisa ser maior que o horário inicial!");
-        fimInput.value = "";
-    }
-});
+    fimInput.addEventListener("change", () => {
+        if (fimInput.value && inicioInput.value && fimInput.value <= inicioInput.value) {
+            alert("O horário final precisa ser maior que o horário inicial!");
+            fimInput.value = "";
+        }
+    });
+}
 
 // Função para inicializar o formulário
 function inicializarFormulario() {
@@ -41,7 +49,7 @@ function inicializarFormulario() {
 }
 
 // Função para adicionar funcionário
-function adicionarFuncionario() {
+async function adicionarFuncionario() {
     // Capturar dados do formulário
     const nome = document.getElementById('nome').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -66,62 +74,101 @@ function adicionarFuncionario() {
         return;
     }
     
+    if (senha.length < 6) {
+        alert('A senha deve ter pelo menos 6 caracteres.');
+        return;
+    }
+    
     if (!horarioInicio || !horarioFim) {
         alert('Por favor, defina o horário de trabalho.');
         return;
     }
     
     // Processar foto (se houver)
-    let fotoBase64 = null;
     if (fotoInput.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            fotoBase64 = e.target.result;
-            salvarFuncionario();
+        reader.onload = async function(e) {
+            const fotoBase64 = e.target.result;
+            await enviarParaAPI(nome, email, senha, horarioInicio, horarioFim, fotoBase64);
         };
         reader.readAsDataURL(fotoInput.files[0]);
     } else {
-        salvarFuncionario();
+        await enviarParaAPI(nome, email, senha, horarioInicio, horarioFim, null);
+    }
+}
+
+// Função para enviar dados para a API
+async function enviarParaAPI(nome, email, senha, horarioInicio, horarioFim, fotoBase64) {
+    // Pegar token do gerente logado
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        alert('Você precisa estar logado como gerente para criar funcionários.');
+        window.location.href = '../../../index.html';
+        return;
     }
     
-    function salvarFuncionario() {
-        // Criar objeto funcionário
-        const funcionario = {
-            id: Date.now(), // ID único baseado no timestamp
-            nome: nome,
-            email: email,
-            senha: senha, // Em produção, nunca armazene senhas em texto plano
-            horarioInicio: horarioInicio,
-            horarioFim: horarioFim,
-            foto: fotoBase64,
-            situacao: 'Ativo',
-            dataCadastro: new Date().toISOString()
-        };
+    // Montar objeto para enviar
+    const dados = {
+        nome: nome,
+        login: email,
+        senha: senha,
+        horarioInicio: horarioInicio,
+        horarioFim: horarioFim,
+        fotoPerfil: fotoBase64
+    };
+    
+    // Desabilitar botão enquanto envia
+    const btnSalvar = document.querySelector('button[type="submit"]');
+    const textoOriginal = btnSalvar.textContent;
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = 'Salvando...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/create-barber`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
         
-        // Recuperar funcionários existentes do localStorage
-        let funcionarios = JSON.parse(localStorage.getItem('funcionarios')) || [];
+        const result = await response.json();
         
-        // Verificar se já existe um funcionário com este email
-        const emailExiste = funcionarios.some(func => func.email === email);
-        if (emailExiste) {
-            alert('Já existe um funcionário cadastrado com este email.');
-            return;
+        if (!response.ok) {
+            throw new Error(result.message || 'Erro ao criar barbeiro');
         }
         
-        // Adicionar novo funcionário
-        funcionarios.push(funcionario);
-        
-        // Salvar no localStorage
-        localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-        
-        // Mostrar mensagem de sucesso
-        alert('Funcionário adicionado com sucesso!');
+        // Sucesso!
+        alert(`Barbeiro ${nome} criado com sucesso!\n\nLogin: ${email}\nSenha: ${senha}\n\nGuarde essas credenciais!`);
         
         // Limpar formulário
         limparFormulario();
         
-        // Opcional: redirecionar para a página inicial
-        // window.location.href = '../aInicio/index.html';
+    } catch (error) {
+        console.error('Erro:', error);
+        
+        let mensagemErro = 'Erro ao criar barbeiro. Tente novamente.';
+        
+        if (error.message.includes('já está em uso')) {
+            mensagemErro = 'Este email já está cadastrado.';
+        } else if (error.message.includes('Apenas gerentes')) {
+            mensagemErro = 'Apenas gerentes podem criar barbeiros.';
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuarioLogado');
+            window.location.href = '../../../index.html';
+            return;
+        } else if (error.message.includes('Failed to fetch')) {
+            mensagemErro = 'Erro de conexão. Verifique se o servidor está rodando.';
+        }
+        
+        alert(mensagemErro);
+        
+    } finally {
+        // Restaurar botão
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = textoOriginal;
     }
 }
 
@@ -138,40 +185,4 @@ function limparFormulario() {
     const preview = document.getElementById('fotoPreview');
     preview.style.backgroundImage = '';
     preview.innerHTML = '<i class="bi bi-cloud-arrow-up"></i>';
-}
-
-// Função para carregar funcionários (para outras páginas)
-function carregarFuncionarios() {
-    return JSON.parse(localStorage.getItem('funcionarios')) || [];
-}
-
-// Função para obter um funcionário por ID
-function obterFuncionarioPorId(id) {
-    const funcionarios = carregarFuncionarios();
-    return funcionarios.find(func => func.id == id);
-}
-
-// Função para atualizar funcionário
-function atualizarFuncionario(id, dadosAtualizados) {
-    let funcionarios = carregarFuncionarios();
-    const index = funcionarios.findIndex(func => func.id == id);
-    
-    if (index !== -1) {
-        funcionarios[index] = { ...funcionarios[index], ...dadosAtualizados };
-        localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-        return true;
-    }
-    return false;
-}
-
-// Função para remover funcionário
-function removerFuncionario(id) {
-    let funcionarios = carregarFuncionarios();
-    funcionarios = funcionarios.filter(func => func.id != id);
-    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-}
-
-// Função para formatar horário para exibição
-function formatarHorario(inicio, fim) {
-    return `${inicio} - ${fim}`;
 }

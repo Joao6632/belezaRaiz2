@@ -1,7 +1,11 @@
 package com.belezaraiz.barbearia.model;
 
+import java.time.LocalTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,11 +46,29 @@ public class User {
     @Column(name = "tipo", nullable = false, length = 21)
     private String tipo = "cliente";
     
+    // ========== CAMPOS PARA BARBEIROS ==========
+    
+    @Column(name = "foto_perfil", length = 500)
+    private String fotoPerfil;
+    
+    @Column(name = "horario_inicio")
+    private LocalTime horarioInicio;
+    
+    @Column(name = "horario_fim")
+    private LocalTime horarioFim;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20)
+    private StatusBarbeiro status;
+    
+    // =================================================
+    
     public User(String nome, String login, String senha, String tipo) {
         this.nome = nome;
         this.login = login;
         this.senha = senha;
         this.tipo = tipo != null ? tipo : "cliente";
+        // Status é setado apenas para barbeiros
     }
     
     // Métodos auxiliares
@@ -56,5 +78,25 @@ public class User {
     
     public boolean isPhoneLogin() {
         return login != null && login.matches("\\d{10,11}");
+    }
+    
+    public boolean isBarbeiro() {
+        return "barbeiro".equalsIgnoreCase(tipo);
+    }
+    
+    public boolean isAtivo() {
+        return StatusBarbeiro.ATIVO.equals(status);
+    }
+    
+    public boolean isDeFerias() {
+        return StatusBarbeiro.FERIAS.equals(status);
+    }
+    
+    public boolean isInativo() {
+        return StatusBarbeiro.INATIVO.equals(status);
+    }
+
+    public void setAtivo(boolean b) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -31,12 +31,20 @@ public class SecurityConfig {
                 // Endpoints públicos para teste
                 .requestMatchers("/api/test/**").permitAll()
                 
-                // Endpoints de autenticação
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                // Endpoints de autenticação públicos
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/gerar-hash").permitAll()
                 
-                // Endpoints que requerem autenticação
+                // Endpoints de autenticação protegidos
                 .requestMatchers("/api/auth/create-barber").authenticated()
                 .requestMatchers("/api/auth/me").authenticated()
+                
+                // ========== NOVOS ENDPOINTS DE BARBEIROS ==========
+                // Público: clientes podem ver barbeiros ativos para agendar
+                .requestMatchers("/api/barbeiros/ativos").permitAll()
+                
+                // Protegido: gerente gerencia barbeiros (listar todos, mudar status)
+                .requestMatchers("/api/barbeiros/**").authenticated()
+                // ==================================================
                 
                 // Console H2 (se estiver usando)
                 .requestMatchers("/h2-console/**").permitAll()

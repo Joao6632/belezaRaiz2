@@ -55,32 +55,28 @@ function saveAuthData(authResponse) {
   }));
 }
 
-// 🔹 Verifica se usuário já está logado
-function checkExistingAuth() {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('usuarioLogado');
-  
-  if (token && user) {
-    // Usuário já logado, pode redirecionar se necessário
-    return JSON.parse(user);
-  }
-  return null;
+// 🔹 Redireciona baseado no tipo de usuário
+function redirectByUserType(tipo) {
+  const routes = {
+    'gerente': '/docs/Visão%20Dono/aInicio/index.html',
+    'barbeiro': '/docs/Visão%20Barbeiro/Agendamentos/Agen.html',
+    'cliente': '/docs/Visão%20Cliente/bInicio/Inicio.html'
+  };
+
+  const url = routes[tipo.toLowerCase()] || '/index.html';
+  window.location.href = url;
 }
 
 // ==== Lógica do Login ====
 document.addEventListener('DOMContentLoaded', () => {
-  // Verifica se já está logado
-  const existingUser = checkExistingAuth();
-  if (existingUser) {
-    console.log('Usuário já logado:', existingUser.nome);
-    // Opcionalmente pode redirecionar aqui
-  }
-
   const loginInput = document.getElementById('loginInput');
   const passwordInput = document.getElementById('senhaInput');
   const loginBtn = document.querySelector('.login-btn');
 
-  if (!loginInput || !passwordInput || !loginBtn) return;
+  if (!loginInput || !passwordInput || !loginBtn) {
+    console.error('Elementos do formulário não encontrados!');
+    return;
+  }
 
   // 🔹 Máscara dinâmica no input
   loginInput.addEventListener('input', () => {
@@ -150,31 +146,26 @@ document.addEventListener('DOMContentLoaded', () => {
       saveAuthData(response);
       
       // ✅ Login OK
-      alert(`Bem-vindo, ${response.nome}!`);
+      console.log('Login realizado com sucesso:', response);
 
       // 🔹 Redirecionamento baseado no tipo
-      if (response.tipo === "barbeiro") {
-        window.location.href = "/docs/Visão%20Barbeiro/Agendamentos/Agen.html";
-      } else if (response.tipo === "gerente") {
-        window.location.href = "/docs/Visão%20Dono/aInicio/index.html";
-      } else if (response.tipo === "cliente") {
-        window.location.href = "/docs/Visão%20Cliente/bInicio/Inicio.html";
-      } else {
-        // Fallback para tipos não esperados
-        window.location.href = "/index.html";
-      }
+      redirectByUserType(response.tipo);
       
     } catch (error) {
       console.error('Erro no login:', error);
       
       // Mostrar erro específico baseado na mensagem
+      let errorMessage = 'Erro ao fazer login. Tente novamente.';
+      
       if (error.message.includes('Credenciais inválidas')) {
-        alert('Email/telefone ou senha incorretos.');
+        errorMessage = 'Email/telefone ou senha incorretos.';
       } else if (error.message.includes('não encontrado')) {
-        alert('Conta não encontrada.');
-      } else {
-        alert('Erro ao fazer login. Verifique sua conexão e tente novamente.');
+        errorMessage = 'Conta não encontrada.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = 'Erro de conexão com o servidor. Verifique sua internet.';
       }
+      
+      alert(errorMessage);
       
       // Restaurar botão
       loginBtn.disabled = false;

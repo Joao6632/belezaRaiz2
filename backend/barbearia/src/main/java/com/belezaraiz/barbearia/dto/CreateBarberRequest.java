@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class CreateBarberRequest {
+    
     @NotBlank(message = "Nome é obrigatório")
     @Size(max = 100, message = "Nome deve ter no máximo 100 caracteres")
     private String nome;
@@ -17,4 +18,14 @@ public class CreateBarberRequest {
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, message = "Senha deve ter pelo menos 6 caracteres")
     private String senha;
+    
+    // ========== NOVOS CAMPOS ==========
+    
+    private String fotoPerfil; // URL ou base64
+    
+    @NotBlank(message = "Horário de início é obrigatório")
+    private String horarioInicio; // Formato: "08:00"
+    
+    @NotBlank(message = "Horário de fim é obrigatório")
+    private String horarioFim; // Formato: "18:00"
 }

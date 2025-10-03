@@ -46,8 +46,7 @@ public class AuthService {
         user.setLogin(request.getLogin());
         user.setSenha(passwordEncoder.encode(request.getSenha()));
         
-        // ✅ CORREÇÃO: Aceitar o tipo que vem na requisição
-        // Se não vier tipo, usa "cliente" como padrão
+        
         String tipo = request.getTipo();
         if (tipo == null || tipo.isBlank()) {
             tipo = "cliente";
