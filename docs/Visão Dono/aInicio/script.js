@@ -1,7 +1,8 @@
+// ==== API Configuration ====
+const API_BASE_URL = 'http://localhost:8080/api';
+
 document.addEventListener("DOMContentLoaded", () => {
     carregarFuncionariosNaTela();
-    
-    // 🔧 CORREÇÃO DA NAVBAR - executar apenas uma vez
     corrigirNavbarAtiva();
 });
 
@@ -12,12 +13,10 @@ function corrigirNavbarAtiva() {
     
     console.log("🔧 Corrigindo navbar. Caminho atual:", currentPath);
     
-    // 🔧 PRIMEIRO: Remover TODAS as classes active
     navLinks.forEach(link => {
         link.classList.remove("active");
     });
     
-    // 🔧 SEGUNDO: Adicionar active apenas no link correto
     let linkEncontrado = false;
     
     navLinks.forEach((link, index) => {
@@ -30,7 +29,6 @@ function corrigirNavbarAtiva() {
         }
     });
     
-    // 🔧 VERIFICAÇÃO: Contar links ativos
     const activeCount = document.querySelectorAll(".bottom-nav-item.active").length;
     console.log(`🔍 Total de links ativos: ${activeCount}`);
     
@@ -39,20 +37,72 @@ function corrigirNavbarAtiva() {
     }
 }
 
-// Função para carregar funcionários do localStorage
-function carregarFuncionarios() {
-    return JSON.parse(localStorage.getItem('funcionarios')) || [];
+// ========== NOVA IMPLEMENTAÇÃO COM API ==========
+
+// Função para buscar barbeiros da API
+async function carregarFuncionarios() {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        console.warn('Token não encontrado. Redirecionando para login...');
+        window.location.href = '../../../index.html';
+        return [];
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/barbeiros`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            console.warn('Token inválido ou expirado');
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuarioLogado');
+            window.location.href = '../../../index.html';
+            return [];
+        }
+        
+        if (!response.ok) {
+            throw new Error(`Erro ao buscar barbeiros: ${response.status}`);
+        }
+        
+        const barbeiros = await response.json();
+        console.log('✅ Barbeiros carregados:', barbeiros);
+        return barbeiros;
+        
+    } catch (error) {
+        console.error('Erro ao carregar funcionários:', error);
+        
+        if (error.message.includes('Failed to fetch')) {
+            alert('Erro de conexão com o servidor. Verifique se o backend está rodando.');
+        }
+        
+        return [];
+    }
 }
 
 // Função para carregar funcionários na tela inicial
-function carregarFuncionariosNaTela() {
-    const funcionarios = carregarFuncionarios();
+async function carregarFuncionariosNaTela() {
     const containerFuncionarios = document.getElementById('funcionarios-container');
     
     if (!containerFuncionarios) {
         console.warn('Container de funcionários não encontrado.');
         return;
     }
+    
+    // Mostrar loading
+    containerFuncionarios.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando funcionários...</p>
+        </div>
+    `;
+    
+    const funcionarios = await carregarFuncionarios();
     
     containerFuncionarios.innerHTML = '';
     
@@ -80,18 +130,50 @@ function criarCardFuncionario(funcionario) {
     card.className = 'card-funcionario';
     card.setAttribute('data-funcionario-id', funcionario.id);
     
-    const imagemSrc = funcionario.foto || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAiIGhlaWdodD0iNzAiIHZpZXdCb3g9IjAgMCA3MCA3MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcwIiBoZWlnaHQ9IjcwIiByeD0iOCIgZmlsbD0iI0Y4RjlGQSIvPgo8cGF0aCBkPSJNMzUgMjBDMzggMjAgNDAgMjIgNDAgMjVDNDAgMjggMzggMzAgMzUgMzBDMzIgMzAgMzAgMjggMzAgMjVDMzAgMjIgMzIgMjAgMzUgMjBaIiBmaWxsPSIjOTNBM0I2Ii8+CjxwYXRoIGQ9Ik0yNSA0NUMyNSA0MCAyOSAzNiAzNSAzNkM0MSAzNiA0NSA0MCA0NSA0NVY1MEgyNVY0NVoiIGZpbGw9IiM5M0EzQjYiLz4KPHN2Zz4=';
-    const horario = `${funcionario.horarioInicio} - ${funcionario.horarioFim}`;
+    // Usar foto do backend ou placeholder
+    const imagemSrc = funcionario.fotoPerfil || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAiIGhlaWdodD0iNzAiIHZpZXdCb3g9IjAgMCA3MCA3MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcwIiBoZWlnaHQ9IjcwIiByeD0iOCIgZmlsbD0iI0Y4RjlGQSIvPgo8cGF0aCBkPSJNMzUgMjBDMzggMjAgNDAgMjIgNDAgMjVDNDAgMjggMzggMzAgMzUgMzBDMzIgMzAgMzAgMjggMzAgMjVDMzAgMjIgMzIgMjAgMzUgMjBaIiBmaWxsPSIjOTNBM0I2Ii8+CjxwYXRoIGQ9Ik0yNSA0NUMyNSA0MCAyOSAzNiAzNSAzNkM0MSAzNiA0NSA0MCA0NSA0NVY1MEgyNVY0NVoiIGZpbGw9IiM5M0EzQjYiLz4KPHN2Zz4=';
+    
+    // Formatação de horário
+    let horario = 'Horário não definido';
+    if (funcionario.horarioInicio && funcionario.horarioFim) {
+        horario = `${funcionario.horarioInicio} - ${funcionario.horarioFim}`;
+    }
+    
+    // Status do barbeiro (mapear do enum para string visual)
+    let statusTexto = 'Ativo';
+    let statusClasse = 'ativo';
+    
+    if (funcionario.status) {
+        switch (funcionario.status.toUpperCase()) {
+            case 'ATIVO':
+                statusTexto = 'Ativo';
+                statusClasse = 'ativo';
+                break;
+            case 'FERIAS':
+                statusTexto = 'Férias';
+                statusClasse = 'ferias';
+                break;
+            case 'INATIVO':
+                statusTexto = 'Inativo';
+                statusClasse = 'inativo';
+                break;
+            default:
+                statusTexto = funcionario.status;
+                statusClasse = funcionario.status.toLowerCase();
+        }
+    }
     
     card.innerHTML = `
         <div class="funcionario-foto">
-            <img src="${imagemSrc}" alt="Foto de ${funcionario.nome}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAiIGhlaWdodD0iNzAiIHZpZXdCb3g9IjAgMCA3MCA3MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcwIiBoZWlnaHQ9IjcwIiByeD0iOCIgZmlsbD0iI0Y4RjlGQSIvPgo8cGF0aCBkPSJNMzUgMjBDMzggMjAgNDAgMjIgNDAgMjVDNDAgMjggMzggMzAgMzUgMzBDMzIgMzAgMzAgMjggMzAgMjVDMzAgMjIgMzIgMjAgMzUgMjBaIiBmaWxsPSIjOTNBM0I2Ii8+CjxwYXRoIGQ9Ik0yNSA0NUMyNSA0MCAyOSAzNiAzNSAzNkM0MSAzNiA0NSA0MCA0NSA0NVY1MEgyNVY0NVoiIGZpbGw9IiM5M0EzQjYiLz4KPHN2Zz4='">
+            <img src="${imagemSrc}" 
+                 alt="Foto de ${funcionario.nome}" 
+                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAiIGhlaWdodD0iNzAiIHZpZXdCb3g9IjAgMCA3MCA3MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcwIiBoZWlnaHQ9IjcwIiByeD0iOCIgZmlsbD0iI0Y4RjlGQSIvPgo8cGF0aCBkPSJNMzUgMjBDMzggMjAgNDAgMjIgNDAgMjVDNDAgMjggMzggMzAgMzUgMzBDMzIgMzAgMzAgMjggMzAgMjVDMzAgMjIgMzIgMjAgMzUgMjBaIiBmaWxsPSIjOTNBM0I2Ii8+CjxwYXRoIGQ9Ik0yNSA0NUMyNSA0MCAyOSAzNiAzNSAzNkM0MSAzNiA0NSA0MCA0NSA0NVY1MEgyNVY0NVoiIGZpbGw9IiM5M0EzQjYiLz4KPHN2Zz4='">
         </div>
         <div class="funcionario-detalhes">
             <h3 class="funcionario-nome">${funcionario.nome}</h3>
             <p class="funcionario-horario">Carga horária: ${horario}</p>
             <div class="funcionario-status">
-                <span class="status ${funcionario.situacao.toLowerCase()}">${funcionario.situacao}</span>
+                <span class="status ${statusClasse}">${statusTexto}</span>
             </div>
         </div>
         <div class="funcionario-acoes">
@@ -113,8 +195,9 @@ function editarFuncionario(id) {
 }
 
 // Função para confirmar remoção do funcionário
-function confirmarRemocaoFuncionario(id) {
-    const funcionario = obterFuncionarioPorId(id);
+async function confirmarRemocaoFuncionario(id) {
+    const funcionarios = await carregarFuncionarios();
+    const funcionario = funcionarios.find(func => func.id == id);
     
     if (!funcionario) {
         alert('Funcionário não encontrado.');
@@ -124,33 +207,69 @@ function confirmarRemocaoFuncionario(id) {
     const confirmacao = confirm(`Tem certeza que deseja remover o funcionário "${funcionario.nome}"?`);
     
     if (confirmacao) {
-        removerFuncionario(id);
-        carregarFuncionariosNaTela();
-        alert('Funcionário removido com sucesso!');
+        await removerFuncionario(id);
     }
 }
 
-// Função para obter funcionário por ID
-function obterFuncionarioPorId(id) {
-    const funcionarios = carregarFuncionarios();
-    return funcionarios.find(func => func.id == id);
-}
-
-// Função para remover funcionário
-function removerFuncionario(id) {
-    let funcionarios = carregarFuncionarios();
-    funcionarios = funcionarios.filter(func => func.id != id);
-    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-}
-
-// Função para alternar status do funcionário
-function alternarStatusFuncionario(id) {
-    let funcionarios = carregarFuncionarios();
-    const funcionario = funcionarios.find(func => func.id == id);
+// Função para remover funcionário (via API)
+async function removerFuncionario(id) {
+    const token = localStorage.getItem('token');
     
-    if (funcionario) {
-        funcionario.situacao = funcionario.situacao === 'Ativo' ? 'Inativo' : 'Ativo';
-        localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+    if (!token) {
+        alert('Você precisa estar logado.');
+        window.location.href = '../../../index.html';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/barbeiros/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao remover funcionário');
+        }
+        
+        alert('Funcionário removido com sucesso!');
         carregarFuncionariosNaTela();
+        
+    } catch (error) {
+        console.error('Erro ao remover funcionário:', error);
+        alert('Erro ao remover funcionário. Tente novamente.');
+    }
+}
+
+// Função para alternar status do funcionário (via API)
+async function alternarStatusFuncionario(id) {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        alert('Você precisa estar logado.');
+        window.location.href = '../../../index.html';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/barbeiros/${id}/toggle-status`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao alterar status');
+        }
+        
+        carregarFuncionariosNaTela();
+        
+    } catch (error) {
+        console.error('Erro ao alterar status:', error);
+        alert('Erro ao alterar status. Tente novamente.');
     }
 }

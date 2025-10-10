@@ -38,7 +38,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/create-barber").authenticated()
                 .requestMatchers("/api/auth/me").authenticated()
                 
-                // ========== NOVOS ENDPOINTS DE BARBEIROS ==========
                 // Público: clientes podem ver barbeiros ativos para agendar
                 .requestMatchers("/api/barbeiros/ativos").permitAll()
                 
@@ -57,7 +56,6 @@ public class SecurityConfig {
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         
-        // Para H2 Console funcionar corretamente
         http.headers(headers -> headers.frameOptions().disable());
         
         return http.build();
@@ -67,7 +65,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Permitir origens específicas (em produção, seja mais específico)
+        // Permitir origens específicas
         configuration.addAllowedOriginPattern("*");
         
         // Permitir todos os métodos HTTP

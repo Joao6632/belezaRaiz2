@@ -1,5 +1,6 @@
 package com.belezaraiz.barbearia.service;
 
+import java.time.LocalTime;
 import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -9,6 +10,7 @@ import com.belezaraiz.barbearia.dto.AuthResponse;
 import com.belezaraiz.barbearia.dto.CreateBarberRequest;
 import com.belezaraiz.barbearia.dto.LoginRequest;
 import com.belezaraiz.barbearia.dto.RegisterRequest;
+import com.belezaraiz.barbearia.model.StatusBarbeiro;
 import com.belezaraiz.barbearia.model.User;
 import com.belezaraiz.barbearia.repository.UserRepository;
 import com.belezaraiz.barbearia.util.JwtUtil;
@@ -46,12 +48,11 @@ public class AuthService {
         user.setLogin(request.getLogin());
         user.setSenha(passwordEncoder.encode(request.getSenha()));
         
-        
         String tipo = request.getTipo();
         if (tipo == null || tipo.isBlank()) {
             tipo = "cliente";
         }
-        user.setTipo(tipo.toLowerCase()); // Garantir lowercase
+        user.setTipo(tipo.toLowerCase());
         
         user = userRepository.save(user);
         log.info("Usuário registrado com sucesso. ID: {}, Tipo: {}", user.getId(), user.getTipo());
@@ -93,14 +94,40 @@ public class AuthService {
             throw new RuntimeException("Login já está em uso");
         }
         
+        // Validar e converter horários
+        LocalTime inicio = null;
+        LocalTime fim = null;
+        
+        if (request.getHorarioInicio() != null && !request.getHorarioInicio().isBlank() &&
+            request.getHorarioFim() != null && !request.getHorarioFim().isBlank()) {
+            try {
+                inicio = LocalTime.parse(request.getHorarioInicio());
+                fim = LocalTime.parse(request.getHorarioFim());
+                
+                if (fim.isBefore(inicio) || fim.equals(inicio)) {
+                    throw new RuntimeException("Horário de fim deve ser maior que o horário de início");
+                }
+            } catch (java.time.format.DateTimeParseException e) {
+                throw new RuntimeException("Formato de horário inválido. Use HH:mm (ex: 08:00)");
+            }
+        }
+        
         User barbeiro = new User();
         barbeiro.setNome(request.getNome());
         barbeiro.setLogin(request.getLogin());
         barbeiro.setSenha(passwordEncoder.encode(request.getSenha()));
         barbeiro.setTipo("barbeiro");
         
+        // Campos específicos do barbeiro
+        barbeiro.setFotoPerfil(request.getFotoPerfil());
+        barbeiro.setHorarioInicio(inicio);
+        barbeiro.setHorarioFim(fim);
+        barbeiro.setStatus(StatusBarbeiro.ATIVO);
+        
         barbeiro = userRepository.save(barbeiro);
-        log.info("Barbeiro criado com sucesso pelo gerente. ID: {}", barbeiro.getId());
+        log.info("Barbeiro criado com sucesso. ID: {}, Nome: {}, Horário: {} às {}", 
+                 barbeiro.getId(), barbeiro.getNome(), 
+                 barbeiro.getHorarioInicio(), barbeiro.getHorarioFim());
         
         String token = jwtUtil.generateToken(barbeiro);
         return new AuthResponse(token, barbeiro.getId(), barbeiro.getNome(), 

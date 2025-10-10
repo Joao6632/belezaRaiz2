@@ -6,7 +6,32 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarFormulario();
     inicializarPreviewFoto();
     inicializarValidacaoHorario();
+    verificarAutenticacao();
 });
+
+// Verificar se está autenticado como gerente
+function verificarAutenticacao() {
+    const token = localStorage.getItem('token');
+    const usuarioLogado = localStorage.getItem('usuarioLogado');
+    
+    if (!token) {
+        alert('Você precisa estar logado como gerente.');
+        window.location.href = '../../../index.html';
+        return;
+    }
+    
+    if (usuarioLogado) {
+        try {
+            const usuario = JSON.parse(usuarioLogado);
+            if (usuario.tipo !== 'gerente') {
+                alert('Apenas gerentes podem acessar esta página.');
+                window.location.href = '../../../index.html';
+            }
+        } catch (e) {
+            console.error('Erro ao parsear usuário:', e);
+        }
+    }
+}
 
 // Preview da foto de perfil
 function inicializarPreviewFoto() {
@@ -15,10 +40,24 @@ function inicializarPreviewFoto() {
         const preview = document.getElementById('fotoPreview');
 
         if (file) {
+            // Validar tamanho do arquivo (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('A foto deve ter no máximo 5MB');
+                event.target.value = '';
+                return;
+            }
+            
+            // Validar tipo de arquivo
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione apenas imagens');
+                event.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function (e) {
                 preview.style.backgroundImage = `url(${e.target.result})`;
-                preview.innerHTML = ""; // remove o ícone
+                preview.innerHTML = "";
             }
             reader.readAsDataURL(file);
         }
@@ -69,6 +108,13 @@ async function adicionarFuncionario() {
         return;
     }
     
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Por favor, digite um email válido.');
+        return;
+    }
+    
     if (!senha) {
         alert('Por favor, digite a senha do funcionário.');
         return;
@@ -81,6 +127,13 @@ async function adicionarFuncionario() {
     
     if (!horarioInicio || !horarioFim) {
         alert('Por favor, defina o horário de trabalho.');
+        return;
+    }
+    
+    // Validar formato de horário (HH:mm)
+    const horarioRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!horarioRegex.test(horarioInicio) || !horarioRegex.test(horarioFim)) {
+        alert('Formato de horário inválido. Use HH:mm (ex: 08:00)');
         return;
     }
     
@@ -114,9 +167,22 @@ async function enviarParaAPI(nome, email, senha, horarioInicio, horarioFim, foto
         login: email,
         senha: senha,
         horarioInicio: horarioInicio,
-        horarioFim: horarioFim,
-        fotoPerfil: fotoBase64
+        horarioFim: horarioFim
     };
+    
+    // Adicionar foto apenas se existir
+    if (fotoBase64) {
+        dados.fotoPerfil = fotoBase64;
+    }
+    
+    // LOG para debug - ver o que está sendo enviado
+    console.log('=== DADOS ENVIADOS ===');
+    console.log('Nome:', dados.nome);
+    console.log('Login:', dados.login);
+    console.log('HorarioInicio:', dados.horarioInicio);
+    console.log('HorarioFim:', dados.horarioFim);
+    console.log('Tem foto?', dados.fotoPerfil ? 'Sim' : 'Não');
+    console.log('Token presente?', token ? 'Sim' : 'Não');
     
     // Desabilitar botão enquanto envia
     const btnSalvar = document.querySelector('button[type="submit"]');
@@ -134,33 +200,56 @@ async function enviarParaAPI(nome, email, senha, horarioInicio, horarioFim, foto
             body: JSON.stringify(dados)
         });
         
-        const result = await response.json();
+        // LOG da resposta
+        console.log('=== RESPOSTA DO SERVIDOR ===');
+        console.log('Status:', response.status);
+        console.log('Status Text:', response.statusText);
+        
+        // Tentar pegar o corpo da resposta
+        const contentType = response.headers.get("content-type");
+        let result;
+        
+        if (contentType && contentType.includes("application/json")) {
+            result = await response.json();
+            console.log('Resposta JSON:', result);
+        } else {
+            const text = await response.text();
+            console.log('Resposta Text:', text);
+            result = { message: text };
+        }
         
         if (!response.ok) {
-            throw new Error(result.message || 'Erro ao criar barbeiro');
+            throw new Error(result.message || result.error || `Erro ${response.status}`);
         }
         
         // Sucesso!
-        alert(`Barbeiro ${nome} criado com sucesso!\n\nLogin: ${email}\nSenha: ${senha}\n\nGuarde essas credenciais!`);
+        alert(`✅ Barbeiro ${nome} criado com sucesso!\n\n📧 Login: ${email}\n🔒 Senha: ${senha}\n\n⚠️ Guarde essas credenciais!`);
         
         // Limpar formulário
         limparFormulario();
         
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('=== ERRO CAPTURADO ===', error);
         
         let mensagemErro = 'Erro ao criar barbeiro. Tente novamente.';
         
         if (error.message.includes('já está em uso')) {
-            mensagemErro = 'Este email já está cadastrado.';
+            mensagemErro = '❌ Este email já está cadastrado.';
         } else if (error.message.includes('Apenas gerentes')) {
-            mensagemErro = 'Apenas gerentes podem criar barbeiros.';
+            mensagemErro = '❌ Apenas gerentes podem criar barbeiros.';
             localStorage.removeItem('token');
             localStorage.removeItem('usuarioLogado');
-            window.location.href = '../../../index.html';
-            return;
+            setTimeout(() => {
+                window.location.href = '../../../index.html';
+            }, 2000);
         } else if (error.message.includes('Failed to fetch')) {
-            mensagemErro = 'Erro de conexão. Verifique se o servidor está rodando.';
+            mensagemErro = '❌ Erro de conexão. Verifique se o servidor está rodando na porta 8080.';
+        } else if (error.message.includes('Login deve ser')) {
+            mensagemErro = '❌ Formato de login inválido. Use um email válido.';
+        } else if (error.message.includes('Horário')) {
+            mensagemErro = `❌ ${error.message}`;
+        } else if (error.message) {
+            mensagemErro = `❌ ${error.message}`;
         }
         
         alert(mensagemErro);

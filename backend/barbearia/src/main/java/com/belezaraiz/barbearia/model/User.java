@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -48,7 +49,9 @@ public class User {
     
     // ========== CAMPOS PARA BARBEIROS ==========
     
-    @Column(name = "foto_perfil", length = 500)
+    // CORRIGIDO: @Lob para suportar imagens Base64 grandes
+    @Lob
+    @Column(name = "foto_perfil", columnDefinition = "LONGTEXT")
     private String fotoPerfil;
     
     @Column(name = "horario_inicio")
@@ -97,6 +100,6 @@ public class User {
     }
 
     public void setAtivo(boolean b) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.status = b ? StatusBarbeiro.ATIVO : StatusBarbeiro.INATIVO;
     }
 }

@@ -69,6 +69,31 @@ public class BarbeiroService {
         return toBarbeiroResponse(barbeiro);
     }
     
+    // Deletar barbeiro (GERENTE apenas)
+    public void deletarBarbeiro(Long barbeiroId, String managerToken) {
+        log.info("Tentando deletar barbeiro ID: {}", barbeiroId);
+        
+        // Validar se é gerente
+        String managerTipo = jwtUtil.extractTipo(managerToken);
+        if (!"gerente".equals(managerTipo)) {
+            log.warn("Tentativa de deletar barbeiro sem ser gerente");
+            throw new RuntimeException("Apenas gerentes podem deletar barbeiros");
+        }
+        
+        // Buscar barbeiro
+        User barbeiro = userRepository.findById(barbeiroId)
+                .orElseThrow(() -> new RuntimeException("Barbeiro não encontrado"));
+        
+        if (!"barbeiro".equalsIgnoreCase(barbeiro.getTipo())) {
+            throw new RuntimeException("Usuário não é um barbeiro");
+        }
+        
+        // Deletar
+        userRepository.delete(barbeiro);
+        log.info("Barbeiro {} (ID: {}) deletado com sucesso pelo gerente", 
+                 barbeiro.getNome(), barbeiroId);
+    }
+    
     // Converter User para BarbeiroResponse
     private BarbeiroResponse toBarbeiroResponse(User user) {
         return new BarbeiroResponse(

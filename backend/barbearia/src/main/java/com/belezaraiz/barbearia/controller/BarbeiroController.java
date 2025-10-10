@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,6 +69,23 @@ public class BarbeiroController {
             return ResponseEntity.ok(barbeiro);
         } catch (Exception e) {
             log.error("Erro ao atualizar status: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+        }
+    }
+    
+    // Deletar barbeiro (GERENTE apenas)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletarBarbeiro(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            barbeiroService.deletarBarbeiro(id, token);
+            log.info("Barbeiro ID {} deletado com sucesso", id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Erro ao deletar barbeiro ID {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse(e.getMessage()));
         }
